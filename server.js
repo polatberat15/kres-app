@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (ŞİFRELİ VELİ SİSTEMİ) ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (LİNK KOPYALAMA EKLENDİ) ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -143,6 +143,17 @@ const portalTheme = `
         document.getElementById(tabId).classList.add('active');
         if(event) event.currentTarget.classList.add('active-btn');
     }
+    function copyToClipboard(text, btnElement) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '✅ Kopyalandı!';
+            btnElement.style.background = '#10b981';
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.style.background = '';
+            }, 2000);
+        });
+    }
     function renderInstallGuide() {
         if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) return '';
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -198,7 +209,7 @@ app.get('/', async (req, res) => {
             ${imgHTML}
             <div style="padding:25px; display:flex; flex-direction:column; flex-grow:1;">
                 <h3 style="margin-top:0; color:var(--blue); font-size:22px;">🎨 ${e.title}</h3>
-                <p style="font-size:15px; color:#475569; margin-bottom:20px;">📅 <b>Tarih:</b> ${e.date}<br>⏰ <b>Saat:</b> ${e.time}<br>💰 <b>Ücret:</b> ${e.price} TL</p>
+                <p style="font-size:15px; color:#475569; margin-bottom:20px;">📅 <b>Tarih:</b> ${e.date}<br>⏰ <b>Saat:</b> ${e.time} - ${e.endTime || 'Belirtilmedi'}<br>💰 <b>Ücret:</b> ${e.price} TL</p>
                 <div style="margin-top:auto;">${actionHTML}</div>
             </div>
         </div>`;
@@ -267,7 +278,7 @@ app.get('/', async (req, res) => {
 });
 
 // ==========================================
-// ATÖLYE PAYLAŞILABİLİR ÖZEL LİNK SAYFASI
+// ATÖLYE PAYLAŞILABİLİR ÖZEL LİNK SAYFASI (KOPYALA BUTONLU)
 // ==========================================
 app.get('/atolye-detay/:id', async (req, res) => {
     const db = await getDB();
@@ -284,8 +295,11 @@ app.get('/atolye-detay/:id', async (req, res) => {
         <div style="max-width:500px; margin:20px auto; padding:0 20px;">
             <div class="card">
                 ${imgHTML}
-                <h2 style="color:var(--blue); margin-top:0;">${e.title}</h2>
-                <p style="color:#475569; font-size:15px;">📅 <b>Tarih:</b> ${e.date}<br>⏰ <b>Saat:</b> ${e.time}<br>💰 <b>Ücret:</b> ${e.price} TL<br>👥 <b>Kontenjan:</b> ${e.quota} Kişi</p>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                    <h2 style="color:var(--blue); margin-top:0;">${e.title}</h2>
+                    <button onclick="copyToClipboard(window.location.href, this)" class="btn-main btn-blue" style="padding:8px 12px; font-size:12px; white-space:nowrap; border-radius:8px;">🔗 Linki Kopyala</button>
+                </div>
+                <p style="color:#475569; font-size:15px;">📅 <b>Tarih:</b> ${e.date}<br>⏰ <b>Saat:</b> ${e.time} - ${e.endTime || 'Belirtilmedi'}<br>💰 <b>Ücret:</b> ${e.price} TL<br>👥 <b>Kontenjan:</b> ${e.quota} Kişi</p>
                 <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
                 <form action="/atolye-rezervasyon/${e.id}" method="POST">
                     <label style="font-size:13px; font-weight:bold; color:#475569;">Çocuğun Adı Soyadı</label>
@@ -500,15 +514,16 @@ app.get('/admin', async (req, res) => {
         </div>`;
     }).join('');
 
-    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} - ${e.time})<br>Kontenjan: ${e.quota} - Ücret: ${e.price} TL<div style="margin-top:10px; display:flex; gap:10px;"><a href="/admin/approve-event/${e.id}" class="btn-main btn-success" style="flex:1;">✅ Onayla</a> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="flex:1;">🗑️ Reddet</a></div></div>`).join('') || '<p style="font-size:13px; color:gray;">Bekleyen atölye talebi yok.</p>';
+    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})<br>Kontenjan: ${e.quota} - Ücret: ${e.price} TL<div style="margin-top:10px; display:flex; gap:10px;"><a href="/admin/approve-event/${e.id}" class="btn-main btn-success" style="flex:1;">✅ Onayla</a> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="flex:1;">🗑️ Reddet</a></div></div>`).join('') || '<p style="font-size:13px; color:gray;">Bekleyen atölye talebi yok.</p>';
     
     let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => {
         let reservationsList = (e.reservations || []).map(r => `• ${r.name} (Yaş: ${r.age || 'Belirtilmedi'}, Tel: ${r.phone})`).join('<br>');
         return `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:15px; border-radius:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <b>🎨 ${e.title} <span style="font-size:12px; color:gray; font-weight:normal;">(${e.date})</span></b> 
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:5px;">
+                <b>🎨 ${e.title} <span style="font-size:12px; color:gray; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> 
                 <div>
-                    <a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:6px 12px; font-size:11px; margin-right:5px;">🔗 Linki Gör</a>
+                    <button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button>
+                    <a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:6px 12px; font-size:11px; margin-right:5px;">🔗 Sayfaya Git</a>
                     <a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a>
                     <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a>
                 </div>
@@ -592,9 +607,10 @@ app.get('/admin', async (req, res) => {
                         <input type="text" name="title" placeholder="Atölye Adı (Örn: Robotik Kodlama)" required>
                         <label style="font-size:12px; font-weight:bold; color:#475569;">Atölye Fotoğrafı Seçin:</label>
                         <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                             <div><label style="font-size:12px; font-weight:bold; color:#475569;">Tarih</label><input type="date" name="date" required style="margin:0;"></div>
-                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Saat</label><input type="time" name="time" required style="margin:0;"></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Başlangıç</label><input type="time" name="time" required style="margin:0;"></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Bitiş</label><input type="time" name="endTime" required style="margin:0;"></div>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
                             <div><label style="font-size:12px; font-weight:bold; color:#475569;">Kontenjan (Kişi)</label><input type="number" name="quota" placeholder="Örn: 15" required style="margin:0;"></div>
@@ -919,7 +935,7 @@ app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     if (req.file) {
         imgPath = await uploadToImgBB(req.file.buffer);
     }
-    db.events.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath, date: req.body.date, time: req.body.time, quota: parseInt(req.body.quota), price: req.body.price, status: 'approved', reservations: [], waitlist: [] });
+    db.events.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath, date: req.body.date, time: req.body.time, endTime: req.body.endTime || 'Belirtilmedi', quota: parseInt(req.body.quota), price: req.body.price, status: 'approved', reservations: [], waitlist: [] });
     db.markModified('events');
     await db.save(); 
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
@@ -1075,9 +1091,10 @@ app.get('/manage/edit-event/:id', async (req, res) => {
                 <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraf (Değiştirmek istemiyorsanız boş bırakın)</label>
                 <input type="file" name="image" accept="image/*" style="background:white;">
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                     <div><label style="font-weight:bold; font-size:13px;">Tarih</label><input type="date" name="date" value="${e.date}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Saat</label><input type="time" name="time" value="${e.time}" required></div>
+                    <div><label style="font-weight:bold; font-size:13px;">Başlangıç</label><input type="time" name="time" value="${e.time}" required></div>
+                    <div><label style="font-weight:bold; font-size:13px;">Bitiş</label><input type="time" name="endTime" value="${e.endTime || ''}" required></div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
                     <div><label style="font-weight:bold; font-size:13px;">Kontenjan (Kişi)</label><input type="number" name="quota" value="${e.quota}" required></div>
@@ -1095,7 +1112,7 @@ app.post('/manage/update-event/:id', upload.single('image'), async (req, res) =>
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     const ev = db.events.find(e => e.id == req.params.id);
     if(ev) {
-        ev.title = req.body.title; ev.date = req.body.date; ev.time = req.body.time; ev.quota = parseInt(req.body.quota); ev.price = req.body.price;
+        ev.title = req.body.title; ev.date = req.body.date; ev.time = req.body.time; ev.endTime = req.body.endTime; ev.quota = parseInt(req.body.quota); ev.price = req.body.price;
         if(req.file) {
             ev.imgUrl = await uploadToImgBB(req.file.buffer);
         }
@@ -1199,8 +1216,8 @@ app.get('/ogretmen-panel', async (req, res) => {
         </div>`;
     }).join('');
 
-    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date})</div>`).join('') || '<p style="font-size:13px;">Bekleyen atölye yok.</p>';
-    let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:10px; border-radius:10px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <div><a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:4px 8px; font-size:11px; margin-right:5px;">Link</a><a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a><a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a></div></div>Kayıtlı: ${e.reservations.length}/${e.quota}</div>`).join('') || '<p style="font-size:13px;">Gelecek aktif atölye yok.</p>';
+    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})</div>`).join('') || '<p style="font-size:13px;">Bekleyen atölye yok.</p>';
+    let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:10px; border-radius:10px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> <div><button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:4px 8px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button><a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:4px 8px; font-size:11px; margin-right:5px;">Git</a><a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a><a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a></div></div>Kayıtlı: ${e.reservations.length}/${e.quota}</div>`).join('') || '<p style="font-size:13px;">Gelecek aktif atölye yok.</p>';
     let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir atölye kaydı yok.</p>';
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1222,11 +1239,12 @@ app.get('/ogretmen-panel', async (req, res) => {
                     <form action="/teacher/request-event" method="POST" enctype="multipart/form-data" style="margin:0;">
                         <input type="text" name="title" placeholder="Atölye Adı" required>
                         <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                             <div><label>Tarih</label><input type="date" name="date" required></div>
-                            <div><label>Saat</label><input type="time" name="time" required></div>
+                            <div><label>Başlama</label><input type="time" name="time" required></div>
+                            <div><label>Bitiş</label><input type="time" name="endTime" required></div>
                         </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
                             <div><label>Kontenjan</label><input type="number" name="quota" required></div>
                             <div><label>Ücret (TL)</label><input type="number" name="price" required></div>
                         </div>
@@ -1306,7 +1324,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
     if (req.file) {
         imgPath = await uploadToImgBB(req.file.buffer);
     }
-    db.events.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath, date: req.body.date, time: req.body.time, quota: parseInt(req.body.quota), price: req.body.price, status: status, reservations: [], waitlist: [] }); 
+    db.events.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath, date: req.body.date, time: req.body.time, endTime: req.body.endTime || 'Belirtilmedi', quota: parseInt(req.body.quota), price: req.body.price, status: status, reservations: [], waitlist: [] }); 
     db.markModified('events');
     await db.save(); 
     res.send(`<script>alert("Talebiniz kaydedildi!"); window.location.href="/ogretmen-panel";</script>`); 
