@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (EĞİTİM MODELLERİ PANELİ EKLENDİ) ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (ÇOKLU FOTOĞRAF, VİDEO & ETKİNLİK GÜNCELLEMESİ) ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -106,6 +106,21 @@ function canManageVitrin(req, db) {
     return false;
 }
 
+function getEmbedHTML(url) {
+    if(!url) return '';
+    if(url.includes('youtube.com') || url.includes('youtu.be')) {
+        let vid = url.split('v=')[1] || url.split('.be/')[1];
+        if(vid) {
+            vid = vid.split('&')[0];
+            return `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen style="border-radius:10px; margin-top:10px; border:2px solid #e2e8f0;"></iframe>`;
+        }
+    } else if (url.includes('instagram.com')) {
+        let cleanUrl = url.split('?')[0].replace(/\/$/, '');
+        return `<iframe src="${cleanUrl}/embed" width="100%" height="400" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius:10px; margin-top:10px; border:2px solid #e2e8f0;"></iframe>`;
+    }
+    return `<a href="${url}" target="_blank" class="btn-main btn-blue" style="margin-top:10px; display:block; text-align:center;">🎥 Videoyu İzle</a>`;
+}
+
 const portalTheme = `
 <style>
     :root { --coral: #ef4444; --amber: #fca311; --cream: #f8fafc; --blue: #1e3a8a; }
@@ -176,11 +191,17 @@ app.get('/', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     const wpUrl = `https://wa.me/90${sc.contactPhone}?text=Merhaba,%20bilgi%20almak%20istiyorum.`;
 
-    let galleryHTML = (sc.gallery || []).map(g => `
-        <div style="background:white; border-radius:15px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
-            <img src="${g.imgUrl}" style="width:100%; height:150px; object-fit:cover;">
-            <div style="padding:15px;"><b>${g.title}</b></div>
-        </div>`).join('');
+    let galleryHTML = (sc.gallery || []).map(g => {
+        let imgs = (g.imgUrls || []).map(u => `<img src="${u}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:5px;">`).join('');
+        if(g.imgUrl && (!g.imgUrls || g.imgUrls.length === 0)) { imgs = `<img src="${g.imgUrl}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:5px;">`; }
+        let vid = getEmbedHTML(g.videoUrl);
+        return `
+        <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
+            <b style="color:var(--blue); font-size:16px;">${g.title}</b>
+            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:5px;">${imgs}</div>
+            ${vid}
+        </div>`;
+    }).join('');
 
     let branchesHTML = (sc.branches || []).map(b => `
         <div class="card" style="border-top: 5px solid ${b.color}; margin-bottom:0;">
@@ -201,7 +222,7 @@ app.get('/', async (req, res) => {
                    <button type="submit" class="btn-main btn-blue" style="width:100%;">Talep Bırak</button>
                </form>`
             : `<div style="color:white; background:#10b981; padding:8px; border-radius:8px; font-weight:bold; margin-bottom:15px; text-align:center;">✅ ${e.quota - e.reservations.length} Kişilik Yer Kaldı</div>
-               <a href="/atolye-detay/${e.id}" class="btn-main btn-success" style="width:100%; text-align:center; box-sizing:border-box; display:block;">Atölyeye Git & Kayıt Ol</a>`;
+               <a href="/atolye-detay/${e.id}" class="btn-main btn-success" style="width:100%; text-align:center; box-sizing:border-box; display:block;">Etkinliğe Git & Kayıt Ol</a>`;
         
         let imgHTML = e.imgUrl ? `<img src="${e.imgUrl}" style="width:100%; height:200px; object-fit:cover; border-bottom:1px solid #e2e8f0;">` : `<div style="height:10px; background:var(--amber);"></div>`;
                
@@ -213,7 +234,7 @@ app.get('/', async (req, res) => {
                 <div style="margin-top:auto;">${actionHTML}</div>
             </div>
         </div>`;
-    }).join('') || '<p style="text-align:center; color:#777; width:100%;">Şu an planlanan atölye bulunmuyor.</p>';
+    }).join('') || '<p style="text-align:center; color:#777; width:100%;">Şu an planlanan etkinlik bulunmuyor.</p>';
 
     res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Albayrak Çocuk Akademisi</title>
     ${portalTheme}
@@ -262,14 +283,14 @@ app.get('/', async (req, res) => {
             ${branchesHTML || '<p style="text-align:center; color:gray; width:100%;">Henüz eğitim modeli eklenmedi.</p>'}
         </div>
 
-        <h2 style="text-align:center; color:var(--blue); margin:50px 0 30px 0; font-size:28px;">🎈 Atölyeler & Kayıt</h2>
+        <h2 style="text-align:center; color:var(--blue); margin:50px 0 30px 0; font-size:28px;">🎈 Etkinliklerimiz & Kayıt</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:25px;">
             ${eventsHTML}
         </div>
 
-        <h2 style="text-align:center; color:var(--blue); margin:50px 0 30px 0; font-size:28px;">📸 Akademiden Kareler</h2>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
-            ${galleryHTML}
+        <h2 style="text-align:center; color:var(--blue); margin:50px 0 30px 0; font-size:28px;">📸 Geçmiş Etkinlikler & Akademi Albümü</h2>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+            ${galleryHTML || '<p style="text-align:center; color:gray; width:100%;">Galeride henüz paylaşım yok.</p>'}
         </div>
     </div>
 
@@ -278,18 +299,18 @@ app.get('/', async (req, res) => {
 });
 
 // ==========================================
-// ATÖLYE PAYLAŞILABİLİR ÖZEL LİNK SAYFASI (KOPYALA BUTONLU)
+// ETKİNLİK PAYLAŞILABİLİR ÖZEL LİNK SAYFASI
 // ==========================================
 app.get('/atolye-detay/:id', async (req, res) => {
     const db = await getDB();
     const e = db.events.find(ev => ev.id == req.params.id);
-    if (!e) return res.send("Atölye bulunamadı.");
+    if (!e) return res.send("Etkinlik bulunamadı.");
 
     let imgHTML = e.imgUrl ? `<img src="${e.imgUrl}" style="width:100%; height:220px; object-fit:cover; border-radius:15px; margin-bottom:15px;">` : '';
     
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
-            <h2 style="margin:0;">🎨 Atölye Kayıt Ekranı</h2>
+            <h2 style="margin:0;">🎨 Etkinlik Kayıt Ekranı</h2>
             <a href="/" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Ana Sayfaya Dön</a>
         </div>
         <div style="max-width:500px; margin:20px auto; padding:0 20px;">
@@ -432,18 +453,21 @@ app.get('/admin', async (req, res) => {
         </div>`;
     }).join('');
 
-    let galleryRows = (sc.gallery || []).map(g => `
+    let galleryRows = (sc.gallery || []).map(g => {
+        let imgs = (g.imgUrls || []).map(u => `<img src="${u}" style="width:30px; height:30px; border-radius:3px; object-fit:cover;">`).join('');
+        if(g.imgUrl && (!g.imgUrls || g.imgUrls.length === 0)) imgs = `<img src="${g.imgUrl}" style="width:30px; height:30px; border-radius:3px; object-fit:cover;">`;
+        return `
         <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-top:10px; align-items:center;">
             <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${g.imgUrl}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
-                <b style="font-size:13px; color:#475569;">${g.title}</b>
+                <div style="display:flex; gap:2px;">${imgs}</div>
+                <b style="font-size:13px; color:#475569;">${g.title} ${g.videoUrl ? '🎥' : ''}</b>
             </div>
             <div>
                 <a href="/manage/edit-gallery/${g.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a>
                 <a href="/manage/delete-gallery/${g.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">Sil</a>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     let branchRows = (sc.branches || []).map(b => `
         <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-top:10px; align-items:center; border-left: 4px solid ${b.color};">
@@ -505,7 +529,7 @@ app.get('/admin', async (req, res) => {
             <div>
                 <b style="color:var(--blue); font-size:16px;">👤 ${t.username}</b><br>
                 <small style="color:var(--coral); font-weight:bold;">Sorumluluk: ${assignedClasses}</small><br>
-                <small style="color:#64748b;">Yetkiler: Yoklama: ${t.yoklama?'✔':'✘'} | Karne: ${t.rapor?'✔':'✘'} | Atölye Açma: ${t.directEvent?'✔':'✘'} | Vitrin: ${t.vitrin?'✔':'✘'}</small>
+                <small style="color:#64748b;">Yetkiler: Yoklama: ${t.yoklama?'✔':'✘'} | Karne: ${t.rapor?'✔':'✘'} | Etkinlik Açma: ${t.directEvent?'✔':'✘'} | Vitrin: ${t.vitrin?'✔':'✘'}</small>
             </div>
             <div style="display:flex; flex-direction:column; gap:5px;">
                 <a href="/admin/edit-teacher/${t.username}" class="btn-main btn-blue" style="font-size:11px; padding:6px 12px;">Düzenle</a>
@@ -514,7 +538,7 @@ app.get('/admin', async (req, res) => {
         </div>`;
     }).join('');
 
-    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})<br>Kontenjan: ${e.quota} - Ücret: ${e.price} TL<div style="margin-top:10px; display:flex; gap:10px;"><a href="/admin/approve-event/${e.id}" class="btn-main btn-success" style="flex:1;">✅ Onayla</a> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="flex:1;">🗑️ Reddet</a></div></div>`).join('') || '<p style="font-size:13px; color:gray;">Bekleyen atölye talebi yok.</p>';
+    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})<br>Kontenjan: ${e.quota} - Ücret: ${e.price} TL<div style="margin-top:10px; display:flex; gap:10px;"><a href="/admin/approve-event/${e.id}" class="btn-main btn-success" style="flex:1;">✅ Onayla</a> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="flex:1;">🗑️ Reddet</a></div></div>`).join('') || '<p style="font-size:13px; color:gray;">Bekleyen etkinlik talebi yok.</p>';
     
     let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => {
         let reservationsList = (e.reservations || []).map(r => `• ${r.name} (Yaş: ${r.age || 'Belirtilmedi'}, Tel: ${r.phone})`).join('<br>');
@@ -533,9 +557,9 @@ app.get('/admin', async (req, res) => {
                 <b>Kayıt Yaptıranlar ve Yaşları:</b><br>${reservationsList || 'Henüz kayıt yaptıran yok.'}
             </div>
         </div>`;
-    }).join('') || '<p style="font-size:13px;">Gelecek aktif atölye yok.</p>';
+    }).join('') || '<p style="font-size:13px;">Gelecek aktif etkinlik yok.</p>';
     
-    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir atölye kaydı yok.</p>';
+    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir etkinlik kaydı yok.</p>';
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -547,7 +571,7 @@ app.get('/admin', async (req, res) => {
             <div style="display:flex; flex-wrap:wrap; margin-bottom:25px;">
                 <button class="tab-btn active-btn" onclick="showTab('t-finans', event)">💰 Finans</button>
                 <button class="tab-btn" onclick="showTab('t-ogrenci', event)">👦 Öğrenciler</button>
-                <button class="tab-btn" onclick="showTab('t-atolye', event)">🎈 Atölyeler</button>
+                <button class="tab-btn" onclick="showTab('t-etkinlik', event)">🎈 Etkinlikler</button>
                 <button class="tab-btn" onclick="showTab('t-sinif', event)">🏫 Sınıflar</button>
                 <button class="tab-btn" onclick="showTab('t-vitrin', event)">🌐 Vitrin Yönetimi</button>
                 <button class="tab-btn" onclick="showTab('t-ogretmen', event)">👩‍🏫 Personel</button>
@@ -600,12 +624,12 @@ app.get('/admin', async (req, res) => {
                 </div>
             </div>
 
-            <div id="t-atolye" class="tab-content">
+            <div id="t-etkinlik" class="tab-content">
                 <div class="card" style="border-left:5px solid var(--blue); background:#eff6ff;">
-                    <h3 style="color:var(--blue); margin-top:0;">👑 Yeni Atölye Yayınla</h3>
+                    <h3 style="color:var(--blue); margin-top:0;">👑 Yeni Etkinlik Yayınla</h3>
                     <form action="/manage/create-event" method="POST" enctype="multipart/form-data" style="margin:0;">
-                        <input type="text" name="title" placeholder="Atölye Adı (Örn: Robotik Kodlama)" required>
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Atölye Fotoğrafı Seçin:</label>
+                        <input type="text" name="title" placeholder="Etkinlik Adı (Örn: Robotik Kodlama)" required>
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Etkinlik Fotoğrafı Seçin:</label>
                         <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                             <div><label style="font-size:12px; font-weight:bold; color:#475569;">Tarih</label><input type="date" name="date" required style="margin:0;"></div>
@@ -616,16 +640,16 @@ app.get('/admin', async (req, res) => {
                             <div><label style="font-size:12px; font-weight:bold; color:#475569;">Kontenjan (Kişi)</label><input type="number" name="quota" placeholder="Örn: 15" required style="margin:0;"></div>
                             <div><label style="font-size:12px; font-weight:bold; color:#475569;">Ücret (TL)</label><input type="number" name="price" placeholder="Örn: 200" required style="margin:0;"></div>
                         </div>
-                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px; padding:14px; font-size:15px;">Atölyeyi Doğrudan Yayına Al</button>
+                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px; padding:14px; font-size:15px;">Etkinliği Doğrudan Yayına Al</button>
                     </form>
                 </div>
                 <div class="card">
                     <h3 style="color:var(--blue); border-bottom:2px solid #f1f5f9; padding-bottom:15px; margin-top:0;">🎈 Yönetim (Düzenle & Sil)</h3>
                     <h4 style="color:#ea580c; margin:15px 0 10px 0;">⏳ Onay Bekleyen Talepler</h4>
                     ${pendingEvents}
-                    <h4 style="color:#10b981; margin:30px 0 10px 0;">✅ Gelecek Atölyeler (Yayında & Yaş Bilgileri)</h4>
+                    <h4 style="color:#10b981; margin:30px 0 10px 0;">✅ Gelecek Etkinlikler (Yayında & Yaş Bilgileri)</h4>
                     ${activeUpcomingEvents}
-                    <h4 style="color:#64748b; margin:30px 0 10px 0;">🕰️ Geçmiş Atölyeler</h4>
+                    <h4 style="color:#64748b; margin:30px 0 10px 0;">🕰️ Geçmiş Etkinlikler</h4>
                     ${pastEventsHTML}
                 </div>
             </div>
@@ -685,13 +709,16 @@ app.get('/admin', async (req, res) => {
                 </div>
 
                 <div class="card">
-                    <h3 style="color:var(--blue); border-bottom:2px solid #f1f5f9; padding-bottom:15px; margin-top:0;">📸 Galeriye Fotoğraf Ekle & Yönet</h3>
+                    <h3 style="color:var(--blue); border-bottom:2px solid #f1f5f9; padding-bottom:15px; margin-top:0;">📸 Akademi Albümüne Gönderi Ekle</h3>
                     <form action="/manage/add-gallery" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                        <input type="text" name="title" placeholder="Fotoğraf Başlığı" required style="margin:0;">
-                        <input type="file" name="image" accept="image/*" required style="background:white; margin:0;">
-                        <button type="submit" class="btn-main" style="background:#f59e0b;">➕ Galeriye Ekle</button>
+                        <input type="text" name="title" placeholder="Gönderi Başlığı (Örn: Doğa Gezimiz)" required style="margin:0;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Fotoğraflar (Birden Fazla Seçebilirsiniz)</label>
+                        <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Video Linki (YouTube veya Instagram - İsteğe Bağlı)</label>
+                        <input type="text" name="videoUrl" placeholder="Örn: https://www.instagram.com/p/..." style="margin:0;">
+                        <button type="submit" class="btn-main" style="background:#f59e0b; margin-top:10px;">➕ Albüme Ekle</button>
                     </form>
-                    <div>${galleryRows || '<p style="font-size:12px; color:gray;">Galeride henüz fotoğraf yok.</p>'}</div>
+                    <div>${galleryRows || '<p style="font-size:12px; color:gray;">Galeride henüz paylaşım yok.</p>'}</div>
                 </div>
             </div>
 
@@ -711,7 +738,7 @@ app.get('/admin', async (req, res) => {
                             <strong>Sistem Yetkileri:</strong><br><br>
                             <label style="cursor:pointer; margin-right:15px;"><input type="checkbox" name="yoklama" value="true"> Yoklama Alma</label>
                             <label style="cursor:pointer; margin-right:15px;"><input type="checkbox" name="rapor" value="true"> Günlük Karne</label>
-                            <label style="cursor:pointer; color:#ef4444; margin-right:15px;"><input type="checkbox" name="directEvent" value="true"> <b>Sormadan Atölye Açma</b></label>
+                            <label style="cursor:pointer; color:#ef4444; margin-right:15px;"><input type="checkbox" name="directEvent" value="true"> <b>Sormadan Etkinlik Açma</b></label>
                             <label style="cursor:pointer; color:#8b5cf6;"><input type="checkbox" name="vitrin" value="true"> <b>Vitrin Yönetimi</b></label>
                         </div>
                         <button type="submit" class="btn-main btn-blue" style="width:100%; padding:14px; font-size:15px;">Öğretmeni Kaydet</button>
@@ -799,7 +826,7 @@ app.get('/admin/edit-teacher/:username', async (req, res) => {
                         <strong>Yetkiler:</strong><br><br>
                         <label style="cursor:pointer; margin-right:15px;"><input type="checkbox" name="yoklama" value="true" ${teacher.yoklama ? 'checked' : ''}> Yoklama</label>
                         <label style="cursor:pointer; margin-right:15px;"><input type="checkbox" name="rapor" value="true" ${teacher.rapor ? 'checked' : ''}> Karne</label>
-                        <label style="cursor:pointer; color:#ef4444; margin-right:15px;"><input type="checkbox" name="directEvent" value="true" ${teacher.directEvent ? 'checked' : ''}> <b>Sormadan Atölye Açma</b></label>
+                        <label style="cursor:pointer; color:#ef4444; margin-right:15px;"><input type="checkbox" name="directEvent" value="true" ${teacher.directEvent ? 'checked' : ''}> <b>Sormadan Etkinlik Açma</b></label>
                         <label style="cursor:pointer; color:#8b5cf6;"><input type="checkbox" name="vitrin" value="true" ${teacher.vitrin ? 'checked' : ''}> <b>Vitrin & Galeri Yönetme</b></label>
                     </div>
                     <button type="submit" class="btn-main btn-success" style="width:100%; padding:14px; font-size:15px;">💾 Değişiklikleri Kaydet</button>
@@ -1029,14 +1056,18 @@ app.post('/manage/update-branch/:id', async (req, res) => {
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
 });
 
-app.post('/manage/add-gallery', upload.single('image'), async (req, res) => { 
+// ÇOKLU FOTOĞRAF VE VİDEO DESTEKLİ ANA GALERİ YÜKLEMESİ
+app.post('/manage/add-gallery', upload.array('images', 10), async (req, res) => { 
     const db = await getDB(); 
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
-    let imgPath = '';
-    if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer);
+    let imgUrls = [];
+    if (req.files && req.files.length > 0) {
+        for (let file of req.files) {
+            let url = await uploadToImgBB(file.buffer);
+            if (url) imgUrls.push(url);
+        }
     }
-    db.siteContent.gallery.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath }); 
+    db.siteContent.gallery.push({ id: Date.now().toString(), title: req.body.title, imgUrls: imgUrls, videoUrl: req.body.videoUrl || '' }); 
     db.markModified('siteContent');
     await db.save(); 
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel'); 
@@ -1057,13 +1088,15 @@ app.get('/manage/edit-gallery/:id', async (req, res) => {
     const g = db.siteContent.gallery.find(x => x.id == req.params.id);
     if(!g) return res.redirect('/');
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
-        <div class="header-card"><h2>✏️ Galeri Fotoğrafını Düzenle</h2></div>
+        <div class="header-card"><h2>✏️ Galeri Gönderisini Düzenle</h2></div>
         <div style="max-width:600px; margin:20px auto; padding:20px;">
             <form action="/manage/update-gallery/${g.id}" method="POST" enctype="multipart/form-data" class="card">
                 <label style="font-weight:bold; font-size:13px;">Başlık</label>
                 <input type="text" name="title" value="${g.title}" required>
-                <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraf (Değiştirmek istemiyorsanız boş bırakın)</label>
-                <input type="file" name="image" accept="image/*" style="background:white;">
+                <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraflar (Eklemek istemiyorsanız boş bırakın. Eskiler silinmez.)</label>
+                <input type="file" name="images" accept="image/*" multiple style="background:white;">
+                <label style="font-weight:bold; font-size:13px;">Video Linki</label>
+                <input type="text" name="videoUrl" value="${g.videoUrl || ''}" placeholder="YouTube veya Instagram Linki">
                 <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:15px; padding:15px;">💾 Değişiklikleri Kaydet</button>
                 <a href="javascript:history.back()" style="display:block; text-align:center; margin-top:15px; color:gray; text-decoration:none; font-weight:bold;">İptal Et</a>
             </form>
@@ -1071,15 +1104,20 @@ app.get('/manage/edit-gallery/:id', async (req, res) => {
     </body></html>`);
 });
 
-app.post('/manage/update-gallery/:id', upload.single('image'), async (req, res) => {
+app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, res) => {
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     const g = db.siteContent.gallery.find(x => x.id == req.params.id);
     if(g) { 
         g.title = req.body.title; 
-        if(req.file) {
-            g.imgUrl = await uploadToImgBB(req.file.buffer);
-        } 
+        g.videoUrl = req.body.videoUrl || '';
+        if (req.files && req.files.length > 0) {
+            if(!g.imgUrls) g.imgUrls = [];
+            for (let file of req.files) {
+                let url = await uploadToImgBB(file.buffer);
+                if (url) g.imgUrls.push(url);
+            }
+        }
         db.markModified('siteContent');
         await db.save();
     }
@@ -1101,10 +1139,10 @@ app.get('/manage/edit-event/:id', async (req, res) => {
     const e = db.events.find(ev => ev.id == req.params.id);
     if(!e) return res.redirect('/');
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
-        <div class="header-card"><h2>✏️ Atölye Düzenle</h2></div>
+        <div class="header-card"><h2>✏️ Etkinlik Düzenle</h2></div>
         <div style="max-width:600px; margin:20px auto; padding:20px;">
             <form action="/manage/update-event/${e.id}" method="POST" enctype="multipart/form-data" class="card">
-                <label style="font-weight:bold; font-size:13px;">Atölye Adı</label>
+                <label style="font-weight:bold; font-size:13px;">Etkinlik Adı</label>
                 <input type="text" name="title" value="${e.title}" required>
                 
                 <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraf (Değiştirmek istemiyorsanız boş bırakın)</label>
@@ -1219,25 +1257,35 @@ app.get('/ogretmen-panel', async (req, res) => {
 
     let teacherClassUploadHTML = teacher.classes.map(clsName => {
         let photos = (db.classGalleries && db.classGalleries.get(clsName)) || [];
-        let photoGrid = photos.map((p, idx) => `
-            <div style="position:relative; display:inline-block; margin:5px;">
-                <img src="${p.imgUrl}" style="width:80px; height:80px; object-fit:cover; border-radius:8px;">
-                <a href="/teacher/delete-gallery/${clsName}/${idx}" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; width:20px; height:20px; text-align:center; font-size:12px; text-decoration:none;">×</a>
-            </div>`).join('') || '<p style="font-size:12px; color:gray;">Bu sınıfa henüz fotoğraf yüklenmedi.</p>';
+        let photoGrid = photos.map((p, idx) => {
+            let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin:2px;">`).join('');
+            if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">`;
+            return `
+            <div style="position:relative; display:inline-block; margin:5px; padding:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+                <div style="display:flex; flex-wrap:wrap; max-width:140px;">${imgs}</div>
+                ${p.videoUrl ? '<div style="font-size:10px; color:var(--blue); font-weight:bold; text-align:center; margin-top:3px;">🎥 Video İçerir</div>' : ''}
+                <a href="/teacher/delete-gallery/${clsName}/${idx}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:12px; text-decoration:none; box-shadow:0 2px 5px rgba(0,0,0,0.2);">×</a>
+            </div>`;
+        }).join('') || '<p style="font-size:12px; color:gray;">Bu sınıfa henüz paylaşım yapılmadı.</p>';
 
         return `<div class="card" style="border-top:4px solid var(--blue); margin-top:15px;">
-            <h4 style="margin:0 0 10px 0; color:var(--blue);">📸 ${clsName} - Sınıf Albümü Paylaşımı</h4>
-            <form action="/teacher/upload-gallery/${clsName}" method="POST" enctype="multipart/form-data" style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-                <input type="file" name="image" accept="image/*" required style="background:white; margin:0; padding:6px;">
-                <button type="submit" class="btn-main btn-success" style="padding:8px 15px; font-size:13px; white-space:nowrap;">Yükle</button>
+            <h4 style="margin:0 0 15px 0; color:var(--blue);">📸 ${clsName} - Albüme Gönderi Ekle</h4>
+            <form action="/teacher/upload-gallery/${clsName}" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px; background:#f1f5f9; padding:15px; border-radius:10px;">
+                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px;">Fotoğraflar (Birden fazla seçilebilir)</label>
+                <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0; padding:8px;">
+                
+                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px; margin-top:5px;">Video Linki (YouTube / Instagram - İsteğe Bağlı)</label>
+                <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/..." style="margin:0;">
+                
+                <button type="submit" class="btn-main btn-success" style="padding:10px 15px; font-size:14px; margin-top:5px;">Sınıf Albümünde Paylaş</button>
             </form>
-            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px;">${photoGrid}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:15px;">${photoGrid}</div>
         </div>`;
     }).join('');
 
-    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})</div>`).join('') || '<p style="font-size:13px;">Bekleyen atölye yok.</p>';
-    let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:10px; border-radius:10px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> <div><button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:4px 8px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button><a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:4px 8px; font-size:11px; margin-right:5px;">Git</a><a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a><a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a></div></div>Kayıtlı: ${e.reservations.length}/${e.quota}</div>`).join('') || '<p style="font-size:13px;">Gelecek aktif atölye yok.</p>';
-    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir atölye kaydı yok.</p>';
+    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})</div>`).join('') || '<p style="font-size:13px;">Bekleyen etkinlik yok.</p>';
+    let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:10px; border-radius:10px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> <div><button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:4px 8px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button><a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:4px 8px; font-size:11px; margin-right:5px;">Git</a><a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a><a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a></div></div>Kayıtlı: ${e.reservations.length}/${e.quota}</div>`).join('') || '<p style="font-size:13px;">Gelecek aktif etkinlik yok.</p>';
+    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir etkinlik kaydı yok.</p>';
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -1248,15 +1296,15 @@ app.get('/ogretmen-panel', async (req, res) => {
             <div style="display:flex; flex-wrap:wrap; margin-bottom:25px;">
                 <button class="tab-btn active-btn" onclick="showTab('t-sinifim', event)">📋 Sınıfım & Yoklama</button>
                 <button class="tab-btn" onclick="showTab('t-galeri', event)">📸 Sınıf Albümü</button>
-                <button class="tab-btn" onclick="showTab('t-atolye', event)">🎈 Atölyeler</button>
+                <button class="tab-btn" onclick="showTab('t-etkinlik', event)">🎈 Etkinlikler</button>
             </div>
             <div id="t-sinifim" class="tab-content active">${studentOperationsHTML}</div>
             <div id="t-galeri" class="tab-content">${teacherClassUploadHTML}</div>
-            <div id="t-atolye" class="tab-content">
+            <div id="t-etkinlik" class="tab-content">
                 <div class="card">
-                    <h3 style="color:#ea580c; margin-top:0;">🎈 Yeni Atölye Talebi</h3>
+                    <h3 style="color:#ea580c; margin-top:0;">🎈 Yeni Etkinlik Talebi</h3>
                     <form action="/teacher/request-event" method="POST" enctype="multipart/form-data" style="margin:0;">
-                        <input type="text" name="title" placeholder="Atölye Adı" required>
+                        <input type="text" name="title" placeholder="Etkinlik Adı" required>
                         <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                             <div><label>Tarih</label><input type="date" name="date" required></div>
@@ -1267,7 +1315,7 @@ app.get('/ogretmen-panel', async (req, res) => {
                             <div><label>Kontenjan</label><input type="number" name="quota" required></div>
                             <div><label>Ücret (TL)</label><input type="number" name="price" required></div>
                         </div>
-                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px;">${teacher.directEvent ? 'Atölyeyi Doğrudan Yayınla' : 'Talebi İlet'}</button>
+                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px;">${teacher.directEvent ? 'Etkinliği Doğrudan Yayınla' : 'Talebi İlet'}</button>
                     </form>
                 </div>
             </div>
@@ -1305,16 +1353,24 @@ app.post('/teacher/send-report/:id', async (req, res) => {
     res.redirect('/ogretmen-panel'); 
 });
 
-app.post('/teacher/upload-gallery/:className', upload.single('image'), async (req, res) => {
+app.post('/teacher/upload-gallery/:className', upload.array('images', 10), async (req, res) => {
     const db = await getDB();
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
     if (!teacher || !teacher.classes.includes(req.params.className)) return res.redirect('/ogretmen-panel');
 
-    let imgUrl = await uploadToImgBB(req.file.buffer);
+    let imgUrls = [];
+    if (req.files && req.files.length > 0) {
+        for (let file of req.files) {
+            let url = await uploadToImgBB(file.buffer);
+            if (url) imgUrls.push(url);
+        }
+    }
+    
     if (!db.classGalleries) db.classGalleries = new Map();
     let arr = db.classGalleries.get(req.params.className) || [];
-    arr.push({ imgUrl, date: new Date().toLocaleDateString('tr-TR') });
+    arr.push({ imgUrls: imgUrls, videoUrl: req.body.videoUrl || '', date: new Date().toLocaleDateString('tr-TR') });
     db.classGalleries.set(req.params.className, arr);
+    
     db.markModified('classGalleries');
     await db.save();
     res.redirect('/ogretmen-panel');
@@ -1438,11 +1494,17 @@ app.get('/veli-panel', async (req, res) => {
     let kalanTutar = (student.tuitionFee || 0) - (student.paidAmount || 0);
 
     const photos = (db.classGalleries && db.classGalleries.get(student.class)) || [];
-    const galleryHTML = photos.map(p => `
-        <div style="background:white; border-radius:15px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:15px;">
-            <img src="${p.imgUrl}" style="width:100%; max-height:300px; object-fit:cover;">
-            <div style="padding:10px; font-size:12px; color:gray; text-align:right;">📅 ${p.date}</div>
-        </div>`).join('') || '<p style="text-align:center; color:gray;">Öğretmeniniz henüz bu sınıfa fotoğraf yüklemedi.</p>';
+    const galleryHTML = photos.map(p => {
+        let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:100%; border-radius:8px; margin-bottom:10px;">`).join('');
+        if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}" style="width:100%; border-radius:8px; margin-bottom:10px;">`;
+        let vid = getEmbedHTML(p.videoUrl);
+        return `
+        <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+            <div style="font-size:12px; color:gray; text-align:right; margin-bottom:10px; font-weight:bold;">📅 ${p.date}</div>
+            ${imgs}
+            ${vid}
+        </div>`;
+    }).join('') || '<p style="text-align:center; color:gray;">Öğretmeniniz henüz bu sınıfa gönderi eklemedi.</p>';
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
