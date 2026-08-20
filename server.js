@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (LİNK KOPYALAMA EKLENDİ) ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (EĞİTİM MODELLERİ PANELİ EKLENDİ) ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -259,7 +259,7 @@ app.get('/', async (req, res) => {
     <div style="max-width:1100px; margin:0 auto; padding:30px 20px;">
         <h2 style="text-align:center; color:var(--blue); margin:20px 0 30px 0; font-size:28px;">🌟 Eğitim Modelimiz</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:25px;">
-            ${branchesHTML}
+            ${branchesHTML || '<p style="text-align:center; color:gray; width:100%;">Henüz eğitim modeli eklenmedi.</p>'}
         </div>
 
         <h2 style="text-align:center; color:var(--blue); margin:50px 0 30px 0; font-size:28px;">🎈 Atölyeler & Kayıt</h2>
@@ -665,6 +665,25 @@ app.get('/admin', async (req, res) => {
                         <button type="submit" class="btn-main btn-blue" style="width:100%; padding:14px; font-size:15px;">💾 Bilgileri Güncelle</button>
                     </form>
                 </div>
+                
+                <div class="card">
+                    <h3 style="color:var(--blue); border-bottom:2px solid #f1f5f9; padding-bottom:15px; margin-top:0;">🌟 Eğitim Modelleri (Branşlar) Yönetimi</h3>
+                    <form action="/manage/add-branch" method="POST" style="margin-bottom:15px;">
+                        <div style="display:grid; grid-template-columns: 1fr 3fr; gap:10px;">
+                            <div><label style="font-weight:bold; font-size:13px;">İkon (Emoji vs)</label><input type="text" name="icon" placeholder="Örn: 🧩" required></div>
+                            <div><label style="font-weight:bold; font-size:13px;">Model Adı</label><input type="text" name="title" placeholder="Örn: Montessori" required></div>
+                        </div>
+                        <label style="font-weight:bold; font-size:13px;">Açıklama</label>
+                        <input type="text" name="desc" placeholder="Örn: Keşfederek öğrenen özgür bireyler." required>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                            <label style="font-weight:bold; font-size:13px;">Tema Rengi Seçin:</label>
+                            <input type="color" name="color" value="#2563eb" style="width:50px; height:40px; padding:0; cursor:pointer;">
+                        </div>
+                        <button type="submit" class="btn-main" style="background:#2563eb; width:100%;">➕ Eğitim Modeli Ekle</button>
+                    </form>
+                    <div>${branchRows || '<p style="font-size:12px; color:gray;">Henüz eğitim modeli eklenmedi.</p>'}</div>
+                </div>
+
                 <div class="card">
                     <h3 style="color:var(--blue); border-bottom:2px solid #f1f5f9; padding-bottom:15px; margin-top:0;">📸 Galeriye Fotoğraf Ekle & Yönet</h3>
                     <form action="/manage/add-gallery" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
