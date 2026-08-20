@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (ÇOKLU FOTOĞRAF, VİDEO & ETKİNLİK GÜNCELLEMESİ) ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (KAYDIRMALI GALERİ EKLENDİ) ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -148,6 +148,9 @@ const portalTheme = `
 
     .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 20px auto; max-width: 600px; text-align: left; color: #92400e; }
     .ios-step { font-size: 13px; margin-bottom: 5px; }
+
+    .horizontal-slider { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+    .horizontal-slider img { width: 220px; height: 160px; object-fit: cover; border-radius: 10px; flex-shrink: 0; scroll-snap-align: start; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 </style>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/logo.jpeg">
@@ -192,13 +195,13 @@ app.get('/', async (req, res) => {
     const wpUrl = `https://wa.me/90${sc.contactPhone}?text=Merhaba,%20bilgi%20almak%20istiyorum.`;
 
     let galleryHTML = (sc.gallery || []).map(g => {
-        let imgs = (g.imgUrls || []).map(u => `<img src="${u}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:5px;">`).join('');
-        if(g.imgUrl && (!g.imgUrls || g.imgUrls.length === 0)) { imgs = `<img src="${g.imgUrl}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:5px;">`; }
+        let imgs = (g.imgUrls || []).map(u => `<img src="${u}">`).join('');
+        if(g.imgUrl && (!g.imgUrls || g.imgUrls.length === 0)) { imgs = `<img src="${g.imgUrl}">`; }
         let vid = getEmbedHTML(g.videoUrl);
         return `
         <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
-            <b style="color:var(--blue); font-size:16px;">${g.title}</b>
-            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:5px;">${imgs}</div>
+            <b style="color:var(--blue); font-size:16px; display:block; margin-bottom:10px;">${g.title}</b>
+            <div class="horizontal-slider">${imgs}</div>
             ${vid}
         </div>`;
     }).join('');
@@ -714,8 +717,8 @@ app.get('/admin', async (req, res) => {
                         <input type="text" name="title" placeholder="Gönderi Başlığı (Örn: Doğa Gezimiz)" required style="margin:0;">
                         <label style="font-size:12px; font-weight:bold; color:#475569;">Fotoğraflar (Birden Fazla Seçebilirsiniz)</label>
                         <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0;">
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Video Linki (YouTube veya Instagram - İsteğe Bağlı)</label>
-                        <input type="text" name="videoUrl" placeholder="Örn: https://www.instagram.com/p/..." style="margin:0;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Video Linki (YouTube - İsteğe Bağlı)</label>
+                        <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/watch?v=..." style="margin:0;">
                         <button type="submit" class="btn-main" style="background:#f59e0b; margin-top:10px;">➕ Albüme Ekle</button>
                     </form>
                     <div>${galleryRows || '<p style="font-size:12px; color:gray;">Galeride henüz paylaşım yok.</p>'}</div>
@@ -1056,7 +1059,6 @@ app.post('/manage/update-branch/:id', async (req, res) => {
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
 });
 
-// ÇOKLU FOTOĞRAF VE VİDEO DESTEKLİ ANA GALERİ YÜKLEMESİ
 app.post('/manage/add-gallery', upload.array('images', 10), async (req, res) => { 
     const db = await getDB(); 
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
@@ -1096,7 +1098,7 @@ app.get('/manage/edit-gallery/:id', async (req, res) => {
                 <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraflar (Eklemek istemiyorsanız boş bırakın. Eskiler silinmez.)</label>
                 <input type="file" name="images" accept="image/*" multiple style="background:white;">
                 <label style="font-weight:bold; font-size:13px;">Video Linki</label>
-                <input type="text" name="videoUrl" value="${g.videoUrl || ''}" placeholder="YouTube veya Instagram Linki">
+                <input type="text" name="videoUrl" value="${g.videoUrl || ''}" placeholder="YouTube Linki">
                 <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:15px; padding:15px;">💾 Değişiklikleri Kaydet</button>
                 <a href="javascript:history.back()" style="display:block; text-align:center; margin-top:15px; color:gray; text-decoration:none; font-weight:bold;">İptal Et</a>
             </form>
@@ -1274,8 +1276,8 @@ app.get('/ogretmen-panel', async (req, res) => {
                 <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px;">Fotoğraflar (Birden fazla seçilebilir)</label>
                 <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0; padding:8px;">
                 
-                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px; margin-top:5px;">Video Linki (YouTube / Instagram - İsteğe Bağlı)</label>
-                <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/..." style="margin:0;">
+                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px; margin-top:5px;">Video Linki (YouTube - İsteğe Bağlı)</label>
+                <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/watch?v=..." style="margin:0;">
                 
                 <button type="submit" class="btn-main btn-success" style="padding:10px 15px; font-size:14px; margin-top:5px;">Sınıf Albümünde Paylaş</button>
             </form>
@@ -1495,13 +1497,13 @@ app.get('/veli-panel', async (req, res) => {
 
     const photos = (db.classGalleries && db.classGalleries.get(student.class)) || [];
     const galleryHTML = photos.map(p => {
-        let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:100%; border-radius:8px; margin-bottom:10px;">`).join('');
-        if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}" style="width:100%; border-radius:8px; margin-bottom:10px;">`;
+        let imgs = (p.imgUrls || []).map(u => `<img src="${u}">`).join('');
+        if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}">`;
         let vid = getEmbedHTML(p.videoUrl);
         return `
         <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
             <div style="font-size:12px; color:gray; text-align:right; margin-bottom:10px; font-weight:bold;">📅 ${p.date}</div>
-            ${imgs}
+            <div class="horizontal-slider">${imgs}</div>
             ${vid}
         </div>`;
     }).join('') || '<p style="text-align:center; color:gray;">Öğretmeniniz henüz bu sınıfa gönderi eklemedi.</p>';
