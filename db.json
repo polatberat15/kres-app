@@ -1,0 +1,153 @@
+{
+  "adminCredentials": {
+    "username": "admin",
+    "password": "123"
+  },
+  "siteContent": {
+    "badgeText": "✨ 2026 - 2027 Erken Kayıtlarımız Başlamıştır",
+    "heroTitle": "Sevgiyle Büyüyen,\nDeğerleriyle Öğrenen Nesiller",
+    "heroDesc": "Albayrak Çocuk Akademisi olarak; modern eğitim yaklaşımları, uzman psikolog ve eğitmen kadromuz, geniş oyun bahçemiz ve organik beslenme programımızla geleceğin özgüvenli bireylerini yetiştiriyoruz.",
+    "contactPhone": "05516046191",
+    "gallery": [
+      {
+        "id": 1,
+        "title": "Doğal Işık Alan Ferah Sınıflar",
+        "desc": "Yaş gruplarına özel olarak hazırlanmış modern eğitim ortamı.",
+        "imgUrl": "https://images.unsplash.com/photo-1576495199011-eb94736d05d6?w=600&q=80"
+      },
+      {
+        "id": 2,
+        "title": "Güvenli Açık & Kapalı Oyun Parkı",
+        "desc": "Darbe emici zeminli, çocuk güvenliğine tam uyumlu parkurlar.",
+        "imgUrl": "https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=600&q=80"
+      },
+      {
+        "id": 3,
+        "title": "Seramik, Kil & Sanat Atölyesi",
+        "desc": "Hayal gücünü somutlaştıran duyusal sanat etkinlikleri.",
+        "imgUrl": "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&q=80"
+      },
+      {
+        "id": 4,
+        "title": "%100 Doğal & Organik Yemekhane",
+        "desc": "Diyetisyen kontrollü, katkısız günlük taze menüler.",
+        "imgUrl": "https://images.unsplash.com/photo-1555244162-803834f70033?w=600&q=80"
+      }
+    ],
+    "branches": [
+      {
+        "id": 1,
+        "icon": "🧩",
+        "title": "Montessori & Yaşam Becerileri",
+        "desc": "Kendi kendine yetebilen, keşfederek öğrenen özgür bireyler.",
+        "color": "#2563eb"
+      },
+      {
+        "id": 2,
+        "icon": "❤️",
+        "title": "Değerler & Karakter Eğitimi",
+        "desc": "Saygı, sevgi, paylaşma ve nezaketi merkezine alan pedagojik rehberlik.",
+        "color": "#ef4444"
+      },
+      {
+        "id": 3,
+        "icon": "🧠",
+        "title": "Akıl Oyunları & Robotik",
+        "desc": "Problem çözme ve motor becerilerini güçlendiren erken kodlama.",
+        "color": "#f59e0b"
+      },
+      {
+        "id": 4,
+        "icon": "🇬🇧",
+        "title": "Çift Dilli İngilizce Eğitimi",
+        "desc": "Oyunlar ve şarkılar eşliğinde doğal akışında yabancı dil.",
+        "color": "#8b5cf6"
+      }
+    ],
+    "instagramUrl": "",
+    "facebookUrl": ""
+  },
+  "classes": [
+    {
+      "id": "Minik_Kalpler",
+      "name": "Minik Kalpler Sınıfı",
+      "age": "2-3 Yaş"
+    },
+    {
+      "id": "Kelebekler",
+      "name": "Kelebekler Sınıfı",
+      "age": "4-5 Yaş"
+    },
+    {
+      "id": "1787046769452",
+      "name": "papatyalar"
+    }
+  ],
+  "students": [
+    {
+      "id": 1787045205165,
+      "name": "DEXTER",
+      "class": "Minik_Kalpler",
+      "parentName": "berat",
+      "parentPhone": "5456923625",
+      "allergy": "Yok",
+      "feePaid": true,
+      "attendance": {
+        "2026-08-18": "Geldi"
+      },
+      "reports": {}
+    },
+    {
+      "id": 1787048149806,
+      "name": "AYKUT ELMAS",
+      "class": "Kelebekler Sınıfı",
+      "parentPhone": "5060256925",
+      "allergy": "çilek",
+      "feePaid": false,
+      "attendance": {
+        "2026-08-18": "Gelmedi"
+      },
+      "reports": {}
+    }
+  ],
+  "teachers": [
+    {
+      "username": "admin",
+      "password": "1234",
+      "classes": [
+        "papatyalar"
+      ],
+      "yoklama": true,
+      "rapor": true,
+      "foto": false
+    }
+  ],
+  "events": [],
+  "weeklyMenu": {
+    "Pazartesi": {
+      "breakfast": "Krep, Beyaz Peynir, Zeytin",
+      "lunch": "Mercimek Çorbası, Tavuk Sote, Pilav",
+      "snack": "Meyve & Fındık"
+    },
+    "Salı": {
+      "breakfast": "Omlet, Domates, Süt",
+      "lunch": "Şehriye Çorbası, Fırında Köfte, Makarna",
+      "snack": "Ev Yoğurdu"
+    },
+    "Çarşamba": {
+      "breakfast": "Kaşarlı Tost, Ihlamur",
+      "lunch": "Tarhana Çorbası, Sebzeli Tavuk, Bulgur Pilavı",
+      "snack": "Meyveli Kek"
+    },
+    "Perşembe": {
+      "breakfast": "Menemen, Peynir, Zeytin",
+      "lunch": "Ezogelin Çorbası, Kıymalı Patates Oturtma",
+      "snack": "Puding"
+    },
+    "Cuma": {
+      "breakfast": "Pankek, Reçel, Süt",
+      "lunch": "Yayla Çorbası, Fırında Balık veya Izgara Köfte",
+      "snack": "Havuçlu Kurabiye"
+    }
+  }
+}
