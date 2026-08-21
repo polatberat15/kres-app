@@ -1,5 +1,5 @@
 // ============================================================================
-// ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ VE TAM SÜRÜM SERVER KODU
+// ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ VE TAM FİNAL SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -11,16 +11,14 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Yüksek boyutlu fotoğraf yüklemeleri için limitleri genişletiyoruz
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
 
-// Multer hafıza ayarı
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 25 * 1024 * 1024 } // 25 MB'a kadar destek
+    limits: { fileSize: 25 * 1024 * 1024 }
 });
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/kres";
@@ -29,7 +27,6 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('☁️ Kalıcı MongoDB Veritabanına Başarıyla Bağlanıldı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
-// Veritabanı Şeması
 const DataSchema = new mongoose.Schema({
     adminCredentials: { 
         username: { type: String, default: "admin" }, 
@@ -62,7 +59,6 @@ const DataSchema = new mongoose.Schema({
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
 
-// Güvenli Veritabanı Getirme ve Eksik Alan Onarma
 async function getDB() {
     let doc = await DataModel.findOne();
     if (!doc) doc = await DataModel.create({});
@@ -97,7 +93,6 @@ async function getDB() {
     return doc;
 }
 
-// WhatsApp Bildirim Gönderici
 async function sendWaNotification(db, message) {
     const phone = db.adminCredentials.waPhone;
     const apikey = db.adminCredentials.waApiKey;
@@ -111,14 +106,12 @@ async function sendWaNotification(db, message) {
     }
 }
 
-// Fotoğrafları Data URI (Base64) formatına çevirme (Harici API gerektirmez, %100 garantili)
 function bufferToDataURI(file) {
     if (!file || !file.buffer) return "";
     const mimeType = file.mimetype || "image/jpeg";
     return `data:${mimeType};base64,${file.buffer.toString('base64')}`;
 }
 
-// Yetki Kontrolü
 function canManageVitrin(req, db) {
     if (req.cookies.admin_logged === 'true') return true;
     if (req.cookies.teacher_user) {
@@ -128,7 +121,6 @@ function canManageVitrin(req, db) {
     return false;
 }
 
-// YouTube / Instagram Video Yerleştirme
 function getEmbedHTML(url) {
     if(!url) return '';
     if(url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -144,7 +136,6 @@ function getEmbedHTML(url) {
     return `<a href="${url}" target="_blank" class="btn-main btn-blue" style="margin-top:10px; display:block; text-align:center;">🎥 Videoyu İzle</a>`;
 }
 
-// Ortak Arayüz Teması ve CSS
 const portalTheme = `
 <style>
     :root { --coral: #ef4444; --amber: #fca311; --cream: #f8fafc; --blue: #1e3a8a; }
@@ -174,6 +165,8 @@ const portalTheme = `
     .horizontal-slider img { width: 220px; height: 160px; object-fit: cover; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .download-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(2px); transition:0.2s; }
     .download-btn:hover { background: rgba(0,0,0,0.8); }
+
+    .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 20px auto; max-width: 500px; color: #92400e; font-size: 13px; text-align: left; }
 </style>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/logo.jpeg">
@@ -196,6 +189,14 @@ const portalTheme = `
 const iconWhatsapp = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.198-.198.347-.764.966-.937 1.164-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>`;
 const iconInstagram = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`;
 const iconFacebook = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>`;
+
+const pwaInstallInfo = `
+    <div class="install-box">
+        <b>📱 Uygulamayı Telefonunuza (Ana Ekrana) Nasıl Eklersiniz?</b><br>
+        • <b>iPhone (Safari):</b> Alttaki "Paylaş" (kare ve yukarı ok) ikonuna basın ve ardından <b>"Ana Ekrana Ekle"</b> seçeneğini seçin.<br>
+        • <b>Android (Chrome):</b> Sağ üstteki üç noktaya basın ve <b>"Uygulamayı Yükle"</b> veya <b>"Ana Ekrana Ekle"</b> seçeneğine tıklayın.
+    </div>
+`;
 
 // ============================================================================
 // 1. ANA VİTRİN SAYFASI
@@ -309,6 +310,10 @@ app.get('/', async (req, res) => {
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
             ${galleryHTML || '<p style="text-align:center; color:gray; width:100%;">Galeride henüz paylaşım yok.</p>'}
         </div>
+        
+        <div style="text-align:center; margin-top:40px;">
+            ${pwaInstallInfo}
+        </div>
     </div>
 
     <a href="${wpUrl}" class="floating-whatsapp" target="_blank">${iconWhatsapp} WhatsApp</a>
@@ -381,7 +386,7 @@ app.post('/atolye-talep/:id', async (req, res) => {
 });
 
 // ============================================================================
-// 3. GİRİŞ KAPISI VE YÖNLENDİRMELER
+// 3. GİRİŞ KAPISI VE GİRİŞ EKRANLARI (PWA BİLGİLENDİRMESİ DAHİL)
 // ============================================================================
 app.get('/portal-giris', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -394,6 +399,9 @@ app.get('/portal-giris', (req, res) => {
             <a href="/login/admin" class="menu-card"><div class="menu-icon">👑</div><span>Müdür Paneli</span></a>
             <a href="/login/ogretmen" class="menu-card"><div class="menu-icon">👩‍🏫</div><span>Öğretmen Paneli</span></a>
             <a href="/login/veli" class="menu-card" style="border:2px solid var(--blue);"><div class="menu-icon" style="background:#dbeafe; color:var(--blue);">👨‍👩‍👧</div><span>Veli Portalı</span></a>
+        </div>
+        <div style="text-align:center; margin-top:30px;">
+            ${pwaInstallInfo}
         </div>
     </body></html>`);
 });
@@ -1054,7 +1062,7 @@ app.get('/admin/approve-event/:id', async (req, res) => {
 });
 
 // ============================================================================
-// 6. ORTAK VİTRİN VE ETKİNLİK YÖNETİMİ (MÜDÜR + YETKİLİ ÖĞRETMEN)
+// 6. ORTAK VİTRİN VE ETKİNLİK YÖNETİMİ
 // ============================================================================
 app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     const db = await getDB();
@@ -1287,17 +1295,23 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ VE SINIF İŞLEMLERİ
+// 7. ÖĞRETMEN PANELİ VE SINIF İŞLEMLERİ (PWA BİLGİLENDİRMESİ DAHİL)
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
-        <div class="header-card"><h2 style="margin:0;">👩‍🏫 Öğretmen Girişi</h2><a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a></div>
+        <div class="header-card">
+            <h2 style="margin:0;">👩‍🏫 Öğretmen Girişi</h2>
+            <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a>
+        </div>
         <div style="padding:30px; max-width:400px; margin:0 auto;">
             <form action="/login/ogretmen" method="POST" class="card">
                 <input type="text" name="username" placeholder="Kullanıcı Adı" required>
                 <input type="password" name="password" placeholder="Şifre" required>
                 <button type="submit" class="btn-main btn-blue" style="width:100%;">Giriş Yap</button>
             </form>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            ${pwaInstallInfo}
         </div>
     </body></html>`);
 });
@@ -1477,7 +1491,6 @@ app.post('/teacher/send-report/:id', async (req, res) => {
     res.redirect('/ogretmen-panel'); 
 });
 
-// Sınıf Albümü Fotoğraf/Video Yükleme
 app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res) => {
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
@@ -1559,7 +1572,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
 });
 
 // ============================================================================
-// 8. VELİ PORTALI (GİRİŞ, ŞİFRE DEĞİŞTİRME VE İNDİRME)
+// 8. VELİ PORTALI (PWA BİLGİLENDİRMESİ DAHİL)
 // ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1573,6 +1586,9 @@ app.get('/login/veli', (req, res) => {
                 <input type="password" name="password" placeholder="Şifreniz (İlk giriş: 1234)" required>
                 <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:10px;">Giriş Yap</button>
             </form>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            ${pwaInstallInfo}
         </div>
     </body></html>`);
 });
@@ -1691,5 +1707,5 @@ app.get('/veli-panel', async (req, res) => {
     </body></html>`);
 });
 
-// Sunucu Başlatma
+// Sunucuyu Başlat
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ BAŞARIYLA BAŞLATILDI: http://localhost:${PORT}`));
