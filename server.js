@@ -1299,7 +1299,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ (TOPLU SINIF KARNESİ VE ÖDEV SİSTEMİ)
+// 7. ÖĞRETMEN PANELİ (TÜM SINIF TEK EKRAN TOPLU KARNE VE YOKLAMA)
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1341,7 +1341,6 @@ app.get('/ogretmen-panel', async (req, res) => {
     
     if (!teacher) return res.redirect('/login/ogretmen');
 
-    // Her sınıf için ayrı sekmeler veya kartlar oluşturup toplu karne formu hazırlıyoruz
     let classTabsHTML = '';
     let classContentsHTML = '';
     let classGalleryHTML = '';
@@ -1353,66 +1352,68 @@ app.get('/ogretmen-panel', async (req, res) => {
 
         classTabsHTML += `<button class="tab-btn ${activeClass}" onclick="showTab('cls-${clsName}', event)">🏫 ${clsName}</button>`;
 
-        // TOPLU KARNE FORMU (TÜM SINIF BİR ARADA)
+        // TÜM SINIFIN ÖĞRENCİLERİ TEK BİR EKRANDA ALT ALTA LİSTELENİR
         let studentsFormRows = classStudents.map(s => {
             let attStatus = (s.attendance && s.attendance[today]) ? s.attendance[today] : 'Geldi';
             let existingReport = (s.reports && s.reports[today]) ? s.reports[today] : {};
 
             return `
-            <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
+            <div style="background:#f8fafc; padding:20px; border-radius:15px; border:1px solid #cbd5e1; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.02);">
                 <input type="hidden" name="studentIds" value="${s.id}">
-                <h4 style="margin:0 0 10px 0; color:var(--blue);">${s.name}</h4>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:10px;">
+                <h3 style="margin:0 0 12px 0; color:var(--blue); border-bottom:1px solid #e2e8f0; padding-bottom:8px;">👶 ${s.name}</h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:12px;">
                     <div>
-                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Yoklama</label>
-                        <select name="att_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Yoklama Durumu</label>
+                        <select name="att_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
                             <option value="Geldi" ${attStatus==='Geldi'?'selected':''}>✔️ Geldi</option>
                             <option value="Gelmedi" ${attStatus==='Gelmedi'?'selected':''}>✖️ Gelmedi</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Uyku</label>
-                        <select name="uyku_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Uyku Durumu</label>
+                        <select name="uyku_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
                             <option value="Uyumadı" ${existingReport.uyku==='Uyumadı'?'selected':''}>Uyumadı</option>
                             <option value="1 Saat Uyudu" ${existingReport.uyku==='1 Saat Uyudu'?'selected':''}>1 Saat Uyudu</option>
                             <option value="2+ Saat Uyudu" ${existingReport.uyku==='2+ Saat Uyudu'?'selected':''}>2+ Saat Uyudu</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Yemek</label>
-                        <select name="yemek_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Yemek Durumu</label>
+                        <select name="yemek_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
                             <option value="Hepsini Yedi" ${existingReport.yemek==='Hepsini Yedi'?'selected':''}>Hepsini Yedi</option>
                             <option value="Yarısını Yedi" ${existingReport.yemek==='Yarısını Yedi'?'selected':''}>Yarısını Yedi</option>
                             <option value="Yemedi" ${existingReport.yemek==='Yemedi'?'selected':''}>Yemedi</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Ruh Hali</label>
-                        <select name="ruh_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Ruh Hali</label>
+                        <select name="ruh_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
                             <option value="Neşeli 😊" ${existingReport.ruhHali==='Neşeli 😊'?'selected':''}>Neşeli 😊</option>
                             <option value="Sakin 😌" ${existingReport.ruhHali==='Sakin 😌'?'selected':''}>Sakin 😌</option>
                             <option value="Hareketli ⚡" ${existingReport.ruhHali==='Hareketli ⚡'?'selected':''}>Hareketli ⚡</option>
                         </select>
                     </div>
                 </div>
-                <input type="text" name="msg_${s.id}" placeholder="Özel Veli Notu (İsteğe bağlı)" value="${existingReport.mesaj || ''}" style="margin:0; font-size:13px; padding:8px;">
+                <label style="font-size:12px; font-weight:bold; color:#475569;">Özel Veli Notu (İsteğe bağlı)</label>
+                <input type="text" name="msg_${s.id}" placeholder="Örn: Bugün harika oyunlar oynadı..." value="${existingReport.mesaj || ''}" style="margin:4px 0 0 0; font-size:14px; padding:10px;">
             </div>`;
         }).join('') || '<p style="color:gray; text-align:center;">Bu sınıfta kayıtlı öğrenci yok.</p>';
 
         classContentsHTML += `
         <div id="cls-${clsName}" class="tab-content ${activeClass}">
             <div class="card">
-                <h3 style="color:var(--blue); margin-top:0;">📋 ${clsName} - Toplu Yoklama & Günlük Karne</h3>
+                <h3 style="color:var(--blue); margin-top:0;">📋 ${clsName} - Sınıf Yoklaması & Günlük Karneler</h3>
+                <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Aşağıdan tüm öğrencilerin bilgilerini tek seferde doldurup en alttaki butonla topluca kaydedebilirsiniz.</p>
                 <form action="/teacher/save-batch-report" method="POST">
                     <input type="hidden" name="date" value="${today}">
                     <input type="hidden" name="className" value="${clsName}">
                     ${studentsFormRows}
-                    ${classStudents.length > 0 ? `<button type="submit" class="btn-main btn-success" style="width:100%; padding:15px; font-size:16px; margin-top:10px;">💾 Tüm Sınıfın Bilgilerini Kaydet & Gönder</button>` : ''}
+                    ${classStudents.length > 0 ? `<button type="submit" class="btn-main btn-success" style="width:100%; padding:16px; font-size:16px; margin-top:15px; box-shadow:0 4px 12px rgba(16,185,129,0.3);">💾 Tüm Sınıfın Kaydını Tamamla & Gönder</button>` : ''}
                 </form>
             </div>
         </div>`;
 
-        // SINIF ALBÜMÜ YÜKLEME KISMI
+        // SINIF ALBÜMÜ KISMI
         let photos = (db.classAlbums || []).filter(item => item && item.className === clsName);
         let photoGrid = photos.map(p => {
             let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin:2px;">`).join('');
@@ -1475,7 +1476,7 @@ app.get('/ogretmen-panel', async (req, res) => {
         </div>
         <div style="max-width:900px; margin:20px auto; padding:0 20px;">
             
-            <h3 style="color:var(--blue); margin-bottom:10px;">🏫 Sınıfım & Yoklama</h3>
+            <h3 style="color:var(--blue); margin-bottom:10px;">🏫 Sınıfım & Toplu Yoklama / Karne</h3>
             <div style="display:flex; flex-wrap:wrap; margin-bottom:15px;">${classTabsHTML}</div>
             <div>${classContentsHTML}</div>
 
@@ -1527,7 +1528,7 @@ app.post('/teacher/save-batch-report', async (req, res) => {
             if (!student.attendance) student.attendance = {};
             student.attendance[date] = attVal;
 
-            // Günlük Karne Kaydı
+            // Günlük Karne Kaydı (Veliler portalda anında görebilecek)
             if (teacher.rapor) {
                 if (!student.reports) student.reports = {};
                 student.reports[date] = {
@@ -1543,7 +1544,7 @@ app.post('/teacher/save-batch-report', async (req, res) => {
 
     db.markModified('students');
     await db.save();
-    res.send(`<script>alert("Tüm sınıfın yoklama ve karneleri başarıyla kaydedildi!"); window.location.href="/ogretmen-panel";</script>`);
+    res.send(`<script>alert("Tüm sınıfın yoklama ve günlük karneleri başarıyla kaydedildi! Veliler artık portallarından görebilir."); window.location.href="/ogretmen-panel";</script>`);
 });
 
 app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res) => {
