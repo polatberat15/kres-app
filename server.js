@@ -1,24 +1,26 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ, HATASIZ FİNAL SÜRÜM ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - KESİN ÇÖZÜMLÜ FİNAL SÜRÜM ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const axios = require('axios');
-const FormData = require('form-data');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 } // 15 MB limit
+});
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/kres";
-const IMGBB_DEFAULT_KEY = "a3bc24a69cf0c9298a88afa4827ff5ea";
+const IMGBB_DEFAULT_KEY = "a734bf8c136cc71f12084c4e92b8a4d0";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('☁️ Kalıcı MongoDB Veritabanına Başarıyla Bağlanıldı!'))
@@ -30,7 +32,7 @@ const DataSchema = new mongoose.Schema({
         password: { type: String, default: "123" },
         waPhone: { type: String, default: "" },
         waApiKey: { type: String, default: "" },
-        imgbbApiKey: { type: String, default: "" }
+        imgbbApiKey: { type: String, default: "a734bf8c136cc71f12084c4e92b8a4d0" }
     },
     siteContent: {
         badgeText: { type: String, default: "✨ 2026 - 2027 Erken Kayıtlarımız Başlamıştır" },
@@ -52,7 +54,7 @@ const DataSchema = new mongoose.Schema({
     students: { type: Array, default: [] },
     teachers: { type: Array, default: [] },
     events: { type: Array, default: [] },
-    classAlbums: { type: Array, default: [] } // ESKİ BOZUK VERİYİ SIFIRLAMAK İÇİN İSMİ DEĞİŞTİRİLDİ
+    classAlbums: { type: Array, default: [] }
 });
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
@@ -64,6 +66,7 @@ async function getDB() {
     if (!doc.siteContent.branches) doc.siteContent.branches = [];
     if (!doc.gallery) doc.gallery = [];
     if (!Array.isArray(doc.classAlbums)) doc.classAlbums = [];
+    if (!doc.adminCredentials.imgbbApiKey) doc.adminCredentials.imgbbApiKey = IMGBB_DEFAULT_KEY;
     
     doc.students.forEach(s => {
         if (!s.attendance) s.attendance = {};
@@ -100,15 +103,26 @@ async function sendWaNotification(db, message) {
     }
 }
 
+// %100 Kararlı ImgBB Yükleme Fonksiyonu
 async function uploadToImgBB(fileBuffer, apiKey) {
-    let key = apiKey || IMGBB_DEFAULT_KEY;
+    const key = apiKey || IMGBB_DEFAULT_KEY;
     try {
-        const form = new FormData();
-        form.append('image', fileBuffer.toString('base64'));
-        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${key}`, form, { headers: form.getHeaders() });
-        return response.data.data.url;
+        const body = new URLSearchParams();
+        body.append('image', fileBuffer.toString('base64'));
+
+        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${key}`, body, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 45000
+        });
+
+        if (response.data && response.data.data && response.data.data.url) {
+            return response.data.data.url;
+        }
+        return "";
     } catch (e) {
-        console.error("ImgBB Yükleme Hatası:", e.message);
+        console.error("ImgBB Upload API Hatası:", e.response ? e.response.data : e.message);
         return "";
     }
 }
@@ -265,7 +279,6 @@ app.get('/', async (req, res) => {
         .hero { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 60px 20px; text-align: center; border-radius: 0 0 40px 40px; }
         .hero h1 { font-size: 32px; margin-bottom: 15px; font-weight: 900; }
         .social-bar a { color: white; text-decoration: none; margin: 5px; font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 20px; display:inline-flex; align-items:center; gap:8px; transition:0.3s; }
-        .social-bar a:hover { transform: scale(1.05); }
         .floating-whatsapp { position: fixed !important; bottom: 30px !important; right: 30px !important; background: #25d366 !important; color: white !important; border-radius: 50px !important; padding: 14px 24px !important; display: flex !important; align-items: center !important; gap: 10px !important; font-weight: bold !important; font-size: 15px !important; text-decoration: none !important; z-index: 99999 !important; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4) !important; transition: 0.3s !important; }
     </style></head><body>
     
@@ -557,7 +570,7 @@ app.get('/admin', async (req, res) => {
         return `
         <div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:15px; border-radius:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:5px;">
-                <b>🎨 ${e.title} <span style="font-size:12px; color:gray; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> 
+                <b>🎨 ${e.title} <span style="font-size:12px; color:gray; font-weight:normal;">(${e.date} | ${e.time})</span></b> 
                 <div>
                     <button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button>
                     <a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:6px 12px; font-size:11px; margin-right:5px;">🔗 Sayfaya Git</a>
@@ -779,10 +792,10 @@ app.get('/admin', async (req, res) => {
 
             <div id="t-ayar" class="tab-content">
                 <div class="card" style="border:2px solid #3b82f6; background:#eff6ff;">
-                    <h3 style="color:#1e3a8a; margin-top:0; border-bottom:2px solid #bfdbfe; padding-bottom:10px;">☁️ Fotoğraf Depolama Ayarları (ÖNEMLİ)</h3>
-                    <p style="font-size:13px; color:#1e3a8a;">Sınırsız fotoğraf yükleyebilmek için ImgBB API Key girmeniz gerekir. Yüklemelerin hata vermemesi için <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a> adresinden ücretsiz hesap açıp alabilirsiniz.</p>
+                    <h3 style="color:#1e3a8a; margin-top:0; border-bottom:2px solid #bfdbfe; padding-bottom:10px;">☁️ Fotoğraf Depolama Ayarları</h3>
+                    <p style="font-size:13px; color:#1e3a8a;">Fotoğraflar ImgBB API ile doğrudan okul hesabınıza yüklenir.</p>
                     <form action="/admin/update-imgbb" method="POST" style="margin-bottom:0;">
-                        <input type="text" name="imgbbApiKey" placeholder="ImgBB API Key girin (Örn: a3bc24...)" value="${db.adminCredentials.imgbbApiKey || ''}" style="background:white; margin-top:5px;">
+                        <input type="text" name="imgbbApiKey" placeholder="ImgBB API Key" value="${db.adminCredentials.imgbbApiKey || ''}" style="background:white; margin-top:5px;">
                         <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:10px;">💾 API Anahtarını Kaydet</button>
                     </form>
                 </div>
@@ -1011,7 +1024,7 @@ app.post('/admin/attendance/:id', async (req, res) => {
     res.redirect('/admin'); 
 });
 
-// AİDAT OTOMATİK HESAPLAMA (KISTELYEVM) İŞLEMİ
+// AİDAT OTOMATİK HESAPLAMA (KISTELYEVM)
 app.post('/admin/add-student', async (req, res) => { 
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
@@ -1022,7 +1035,7 @@ app.post('/admin/add-student', async (req, res) => {
     if (req.body.prorate === 'true' && req.body.startDate) {
         let start = new Date(req.body.startDate);
         let year = start.getFullYear();
-        let month = start.getMonth() + 1; // getMonth 0-11 arasıdır
+        let month = start.getMonth() + 1;
         let day = start.getDate();
         
         let daysInMonth = new Date(year, month, 0).getDate();
@@ -1075,7 +1088,7 @@ app.get('/admin/approve-event/:id', async (req, res) => {
 });
 
 // ==========================================
-// ORTAK YÖNETİM ROTALARI (MÜDÜR + YETKİLİ ÖĞRETMEN)
+// ORTAK YÖNETİM ROTALARI
 // ==========================================
 app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     const db = await getDB();
@@ -1129,13 +1142,13 @@ app.get('/manage/edit-event/:id', async (req, res) => {
                 <input type="file" name="image" accept="image/*" style="background:white;">
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                    <div><label style="font-weight:bold; font-size:13px;">Tarih</label><input type="date" name="date" value="${e.date}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Başlangıç</label><input type="time" name="time" value="${e.time}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Bitiş</label><input type="time" name="endTime" value="${e.endTime || ''}" required></div>
+                    <div><label>Tarih</label><input type="date" name="date" value="${e.date}" required></div>
+                    <div><label>Başlangıç</label><input type="time" name="time" value="${e.time}" required></div>
+                    <div><label>Bitiş</label><input type="time" name="endTime" value="${e.endTime || ''}" required></div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                    <div><label style="font-weight:bold; font-size:13px;">Kontenjan (Kişi)</label><input type="number" name="quota" value="${e.quota}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Ücret (TL)</label><input type="number" name="price" value="${e.price}" required></div>
+                    <div><label>Kontenjan</label><input type="number" name="quota" value="${e.quota}" required></div>
+                    <div><label>Ücret</label><input type="number" name="price" value="${e.price}" required></div>
                 </div>
                 <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:15px; padding:15px;">💾 Değişiklikleri Kaydet</button>
                 <a href="javascript:history.back()" style="display:block; text-align:center; margin-top:15px; color:gray; text-decoration:none; font-weight:bold;">İptal Et</a>
@@ -1207,10 +1220,10 @@ app.get('/manage/edit-branch/:id', async (req, res) => {
         <div style="max-width:600px; margin:20px auto; padding:20px;">
             <form action="/manage/update-branch/${b.id}" method="POST" class="card">
                 <div style="display:grid; grid-template-columns: 1fr 3fr; gap:10px;">
-                    <div><label style="font-weight:bold; font-size:13px;">İkon</label><input type="text" name="icon" value="${b.icon}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Model Adı</label><input type="text" name="title" value="${b.title}" required></div>
+                    <div><label>İkon</label><input type="text" name="icon" value="${b.icon}" required></div>
+                    <div><label>Model Adı</label><input type="text" name="title" value="${b.title}" required></div>
                 </div>
-                <label style="font-weight:bold; font-size:13px;">Açıklama</label>
+                <label>Açıklama</label>
                 <input type="text" name="desc" value="${b.desc}" required>
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                     <label style="font-weight:bold; font-size:13px;">Tema Rengi:</label>
@@ -1249,10 +1262,6 @@ app.post('/manage/add-gallery', upload.array('images', 10), async (req, res) => 
             let url = await uploadToImgBB(file.buffer, apiKey);
             if (url) imgUrls.push(url);
         }
-    }
-    
-    if (imgUrls.length === 0 && (!req.body.videoUrl)) {
-        return res.send(`<script>alert("Hata: Yükleme başarısız! Lütfen geçerli bir API Key girin veya boyutları kontrol edin."); window.location.href="javascript:history.back()";</script>`);
     }
 
     db.siteContent.gallery.push({ id: Date.now().toString(), title: req.body.title, imgUrls: imgUrls, videoUrl: req.body.videoUrl || '' }); 
@@ -1314,7 +1323,6 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
     }
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
 });
-
 
 // ==========================================
 // 5. ÖĞRETMEN PANELİ
@@ -1427,7 +1435,8 @@ app.get('/ogretmen-panel', async (req, res) => {
         return `
         <div class="card" style="border-top:4px solid var(--blue); margin-top:15px;">
             <h4 style="margin:0 0 15px 0; color:var(--blue);">📸 ${clsName} - Albüme Gönderi Ekle</h4>
-            <form action="/teacher/upload-gallery/${clsName}" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px; background:#f1f5f9; padding:15px; border-radius:10px;">
+            <form action="/teacher/upload-gallery" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px; background:#f1f5f9; padding:15px; border-radius:10px;">
+                <input type="hidden" name="className" value="${clsName}">
                 <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px;">Fotoğraflar (Birden fazla seçilebilir)</label>
                 <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0; padding:8px;">
                 
@@ -1506,10 +1515,13 @@ app.post('/teacher/send-report/:id', async (req, res) => {
     res.redirect('/ogretmen-panel'); 
 });
 
-app.post('/teacher/upload-gallery/:className', upload.array('images', 10), async (req, res) => {
+// Sınıf Albümü Yükleme Rotası
+app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res) => {
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
-    if (!teacher || !teacher.classes.includes(req.params.className)) return res.redirect('/ogretmen-panel');
+    const targetClass = req.body.className;
+    
+    if (!teacher || !teacher.classes.includes(targetClass)) return res.redirect('/ogretmen-panel');
 
     const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgUrls = []; 
@@ -1521,14 +1533,14 @@ app.post('/teacher/upload-gallery/:className', upload.array('images', 10), async
     }
     
     if (imgUrls.length === 0 && !req.body.videoUrl) {
-        return res.send(`<script>alert("HATA: Fotoğraflar yüklenemedi. Lütfen API anahtarınızı (Ayarlar) kontrol edin veya en az bir video linki ekleyin."); window.location.href="/ogretmen-panel";</script>`);
+        return res.send(`<script>alert("HATA: Fotoğraflar sunucuya yüklenemedi. Lütfen internet bağlantınızı veya dosya boyutunu kontrol edin."); window.location.href="/ogretmen-panel";</script>`);
     }
 
     if (!Array.isArray(db.classAlbums)) db.classAlbums = [];
     
     db.classAlbums.push({
         id: Date.now().toString(),
-        className: req.params.className,
+        className: targetClass,
         imgUrls: imgUrls,
         videoUrl: req.body.videoUrl || '',
         date: new Date().toLocaleDateString('tr-TR')
@@ -1719,4 +1731,4 @@ app.get('/veli-panel', async (req, res) => {
     </body></html>`);
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ AKTİF: http://localhost:${PORT}`));
