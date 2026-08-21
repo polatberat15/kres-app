@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ FİNAL SÜRÜMÜ (KAYDIRMALI GALERİ EKLENDİ) ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ FİNAL SÜRÜMÜ ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -25,7 +25,12 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const DataSchema = new mongoose.Schema({
-    adminCredentials: { username: { type: String, default: "admin" }, password: { type: String, default: "123" } },
+    adminCredentials: { 
+        username: { type: String, default: "admin" }, 
+        password: { type: String, default: "123" },
+        waPhone: { type: String, default: "" },
+        waApiKey: { type: String, default: "" }
+    },
     siteContent: {
         badgeText: { type: String, default: "✨ 2026 - 2027 Erken Kayıtlarımız Başlamıştır" },
         heroTitle: { type: String, default: "Sevgiyle Büyüyen,\nDeğerleriyle Öğrenen Nesiller" },
@@ -83,13 +88,25 @@ async function getDB() {
     return doc;
 }
 
+// WhatsApp Bildirim Gönderici Fonksiyon
+async function sendWaNotification(db, message) {
+    const phone = db.adminCredentials.waPhone;
+    const apikey = db.adminCredentials.waApiKey;
+    if (phone && apikey) {
+        try {
+            const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apikey}`;
+            await axios.get(url);
+        } catch(e) {
+            console.error('WA Bildirim Hatası:', e.message);
+        }
+    }
+}
+
 async function uploadToImgBB(fileBuffer) {
     try {
         const form = new FormData();
         form.append('image', fileBuffer.toString('base64'));
-        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, form, {
-            headers: form.getHeaders()
-        });
+        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, form, { headers: form.getHeaders() });
         return response.data.data.url;
     } catch (e) {
         console.error("ImgBB Yükleme Hatası:", e);
@@ -121,6 +138,18 @@ function getEmbedHTML(url) {
     return `<a href="${url}" target="_blank" class="btn-main btn-blue" style="margin-top:10px; display:block; text-align:center;">🎥 Videoyu İzle</a>`;
 }
 
+// Resim İndirme Proxy Servisi (CORS Sorununu Çözer)
+app.get('/download-image', async (req, res) => {
+    try {
+        const response = await axios.get(req.query.url, { responseType: 'arraybuffer' });
+        res.setHeader('Content-Disposition', 'attachment; filename="albayrak-akademi.jpg"');
+        res.setHeader('Content-Type', response.headers['content-type']);
+        res.send(response.data);
+    } catch (e) {
+        res.redirect(req.query.url); // Hata olursa direkt URL'ye yönlendir
+    }
+});
+
 const portalTheme = `
 <style>
     :root { --coral: #ef4444; --amber: #fca311; --cream: #f8fafc; --blue: #1e3a8a; }
@@ -133,24 +162,25 @@ const portalTheme = `
     .menu-icon { font-size: 32px; background: #eff6ff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
     .btn-main { background: var(--coral); color: white; border: none; padding: 12px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; display:inline-block; text-decoration:none; text-align:center; transition: 0.2s; }
     .btn-main:hover { opacity: 0.9; }
-    .btn-success { background: #10b981; } .btn-danger { background: #ef4444; } .btn-blue { background: var(--blue); } .btn-wa { background: #25d366; color: white; }
-    input, select, textarea { width: 100%; padding: 12px; margin: 8px 0 18px 0; border: 1px solid #e2e8f0; border-radius: 10px; font-family:inherit; font-size: 14px; background: #f8fafc; box-sizing: border-box; }
+    .btn-success { background: #10b981; } .btn-blue { background: var(--blue); } .btn-danger { background: #ef4444; } .btn-wa { background: #25d366; color: white; }
+    input, select, textarea { width: 100%; padding: 12px; margin: 8px 0 18px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; box-sizing: border-box; font-family: inherit;}
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size:14px; }
     th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
     th { background: #f1f5f9; color: #475569; font-weight: 700; border-radius: 10px 10px 0 0; }
     
     .tab-content { display: none; }
     .tab-content.active { display: block; animation: fadeIn 0.4s; }
-    .tab-btn { background: #e2e8f0; color: #334155; border: none; padding: 12px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 10px; transition: 0.2s; font-size:14px; }
-    .tab-btn:hover { background: #cbd5e1; }
+    .tab-btn { background: #e2e8f0; color: #334155; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 10px; font-size:14px; }
     .tab-btn.active-btn { background: var(--blue); color: white; box-shadow: 0 4px 10px rgba(30,58,138,0.3); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 20px auto; max-width: 600px; text-align: left; color: #92400e; }
-    .ios-step { font-size: 13px; margin-bottom: 5px; }
-
     .horizontal-slider { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; }
-    .horizontal-slider img { width: 220px; height: 160px; object-fit: cover; border-radius: 10px; flex-shrink: 0; scroll-snap-align: start; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .img-container { position: relative; display: inline-block; flex-shrink: 0; scroll-snap-align: start; }
+    .horizontal-slider img { width: 220px; height: 160px; object-fit: cover; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .download-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(2px); transition:0.2s; }
+    .download-btn:hover { background: rgba(0,0,0,0.8); }
+
+    .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 20px auto; max-width: 600px; color: #92400e; font-size:14px; }
 </style>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/logo.jpeg">
@@ -161,29 +191,17 @@ const portalTheme = `
         document.getElementById(tabId).classList.add('active');
         if(event) event.currentTarget.classList.add('active-btn');
     }
-    function copyToClipboard(text, btnElement) {
-        navigator.clipboard.writeText(text).then(() => {
-            const originalText = btnElement.innerHTML;
-            btnElement.innerHTML = '✅ Kopyalandı!';
-            btnElement.style.background = '#10b981';
-            setTimeout(() => {
-                btnElement.innerHTML = originalText;
-                btnElement.style.background = '';
-            }, 2000);
-        });
-    }
-    function renderInstallGuide() {
-        if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) return '';
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        return isIOS ? 
-            \`<div class="install-box"><b>📱 iPhone (Safari) ile Ana Ekrana Ekleme:</b><div class="ios-step">1. Safari alt menüsündeki <b>Paylaş</b> butonuna basın.</div><div class="ios-step">2. <b>"Ana Ekrana Ekle"</b> seçeneğine dokunun.</div></div>\` : 
-            \`<div class="install-box"><b>🤖 Android (Chrome) ile Ana Ekrana Ekleme:</b><div class="ios-step">1. Sağ üstteki <b>üç nokta (...)</b> menüsüne basın.</div><div class="ios-step">2. <b>"Ana Ekrana Ekle"</b> butonuna dokunun.</div></div>\`;
+    function copyToClipboard(text, btn) {
+        navigator.clipboard.writeText(text);
+        let orig = btn.innerHTML;
+        btn.innerHTML = '✅ Kopyalandı!';
+        btn.style.background = '#10b981';
+        setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
     }
 </script>`;
 
 const iconWhatsapp = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.198-.198.347-.764.966-.937 1.164-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>`;
 const iconInstagram = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`;
-const iconFacebook = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>`;
 
 // ==========================================
 // 1. ANA VİTRİN SAYFASI
@@ -195,13 +213,18 @@ app.get('/', async (req, res) => {
     const wpUrl = `https://wa.me/90${sc.contactPhone}?text=Merhaba,%20bilgi%20almak%20istiyorum.`;
 
     let galleryHTML = (sc.gallery || []).map(g => {
-        let imgs = (g.imgUrls || []).map(u => `<img src="${u}">`).join('');
-        if(g.imgUrl && (!g.imgUrls || g.imgUrls.length === 0)) { imgs = `<img src="${g.imgUrl}">`; }
+        let rawImgs = (g.imgUrls && g.imgUrls.length > 0) ? g.imgUrls : (g.imgUrl ? [g.imgUrl] : []);
+        let imgsHTML = rawImgs.map(u => `
+            <div class="img-container">
+                <img src="${u}">
+                <a href="/download-image?url=${encodeURIComponent(u)}" class="download-btn">⬇️ İndir</a>
+            </div>
+        `).join('');
         let vid = getEmbedHTML(g.videoUrl);
         return `
         <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 5px 15px rgba(0,0,0,0.05);">
             <b style="color:var(--blue); font-size:16px; display:block; margin-bottom:10px;">${g.title}</b>
-            <div class="horizontal-slider">${imgs}</div>
+            <div class="horizontal-slider">${imgsHTML}</div>
             ${vid}
         </div>`;
     }).join('');
@@ -245,9 +268,7 @@ app.get('/', async (req, res) => {
         .hero { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 60px 20px; text-align: center; border-radius: 0 0 40px 40px; }
         .hero h1 { font-size: 32px; margin-bottom: 15px; font-weight: 900; }
         .social-bar a { color: white; text-decoration: none; margin: 5px; font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 20px; display:inline-flex; align-items:center; gap:8px; transition:0.3s; }
-        .social-bar a:hover { transform: scale(1.05); }
         .floating-whatsapp { position: fixed !important; bottom: 30px !important; right: 30px !important; background: #25d366 !important; color: white !important; border-radius: 50px !important; padding: 14px 24px !important; display: flex !important; align-items: center !important; gap: 10px !important; font-weight: bold !important; font-size: 15px !important; text-decoration: none !important; z-index: 99999 !important; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4) !important; transition: 0.3s !important; }
-        .floating-whatsapp:hover { transform: scale(1.08); background: #20ba5a !important; }
     </style></head><body>
     
     <div style="padding:15px 25px; background:white; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 15px rgba(0,0,0,0.05); position:sticky; top:0; z-index:999;">
@@ -259,12 +280,10 @@ app.get('/', async (req, res) => {
     </div>
 
     <div class="hero">
-        <div style="background:#e11d48; display:inline-block; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:bold; margin-bottom:15px; box-shadow:0 4px 10px rgba(225,29,72,0.3);">${sc.badgeText}</div>
+        <div style="background:#e11d48; display:inline-block; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:bold; margin-bottom:15px;">${sc.badgeText}</div>
         <h1>${sc.heroTitle.replace(/\n/g, '<br>')}</h1>
         <p style="opacity:0.9; max-width:600px; margin:0 auto 25px auto; font-size:16px;">${sc.heroDesc}</p>
         
-        <script>document.write(renderInstallGuide());</script>
-
         <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:20px;">
             <a href="${wpUrl}" class="btn-main" target="_blank" style="background:#25d366; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 24px; font-size:15px;">
                 ${iconWhatsapp} WhatsApp Randevu
@@ -276,7 +295,6 @@ app.get('/', async (req, res) => {
 
         <div class="social-bar" style="margin-top:25px; display:flex; justify-content:center; flex-wrap:wrap;">
             ${sc.instagramUrl ? `<a href="${sc.instagramUrl}" target="_blank" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);">${iconInstagram} Instagram</a>` : ''}
-            ${sc.facebookUrl ? `<a href="${sc.facebookUrl}" target="_blank" style="background: #1877f2;">${iconFacebook} Facebook</a>` : ''}
         </div>
     </div>
 
@@ -328,13 +346,10 @@ app.get('/atolye-detay/:id', async (req, res) => {
                 <form action="/atolye-rezervasyon/${e.id}" method="POST">
                     <label style="font-size:13px; font-weight:bold; color:#475569;">Çocuğun Adı Soyadı</label>
                     <input type="text" name="name" placeholder="Örn: Ali Yılmaz" required>
-                    
                     <label style="font-size:13px; font-weight:bold; color:#475569;">Çocuğun Yaşı</label>
                     <input type="number" name="age" placeholder="Örn: 4" required min="1" max="10">
-                    
                     <label style="font-size:13px; font-weight:bold; color:#475569;">Veli Telefon Numarası</label>
                     <input type="text" name="phone" placeholder="0555..." required>
-                    
                     <button type="submit" class="btn-main btn-success" style="width:100%; padding:14px; font-size:16px; margin-top:10px;">✅ Kaydı Tamamla</button>
                 </form>
             </div>
@@ -347,11 +362,15 @@ app.post('/atolye-rezervasyon/:id', async (req, res) => {
     const ev = db.events.find(e => e.id == req.params.id); 
     if(ev && ev.reservations.length < ev.quota) { 
         ev.reservations.push({ name: req.body.name, age: req.body.age, phone: req.body.phone }); 
+        
+        // WA BİLDİRİMİ GÖNDERİMİ
+        sendWaNotification(db, `✅ YENİ KAYIT: ${req.body.name} isimli öğrenci (Yaş:${req.body.age}) "${ev.title}" etkinliğine kayıt oldu! İletişim: ${req.body.phone}`);
+        
         db.markModified('events');
         await db.save(); 
         res.send(`<script>alert("Rezervasyon başarıyla oluşturuldu!"); window.location.href="/";</script>`); 
     } else {
-        res.send(`<script>alert("Hata: Kontenjan dolu!"); window.location.href="/";</script>`); 
+        res.send(`<script>alert("Hata: Kontenjan dolu veya atölye bulunamadı!"); window.location.href="/";</script>`); 
     }
 });
 
@@ -361,6 +380,10 @@ app.post('/atolye-talep/:id', async (req, res) => {
     if(ev) { 
         if(!ev.waitlist) ev.waitlist = []; 
         ev.waitlist.push({ name: req.body.name, phone: req.body.phone }); 
+        
+        // WA BİLDİRİMİ GÖNDERİMİ
+        sendWaNotification(db, `⚠️ YENİ SINIF TALEBİ: "${ev.title}" kontenjanı dolduğu için ${req.body.name} isimli veli talep bıraktı. İletişim: ${req.body.phone}`);
+        
         db.markModified('events');
         await db.save(); 
         res.send(`<script>alert("Talebiniz alındı! Yeni sınıf açıldığında haber vereceğiz."); window.location.href="/";</script>`); 
@@ -368,48 +391,31 @@ app.post('/atolye-talep/:id', async (req, res) => {
 });
 
 // ==========================================
-// KULLANICI GİRİŞ SEÇİMİ
+// KULLANICI GİRİŞ SEÇİMİ VE GİRİŞ EKRANLARI
 // ==========================================
 app.get('/portal-giris', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
-            <img src="/logo.jpeg" width="80" height="80" style="border-radius:15px; background:white; margin-bottom:15px; box-shadow:0 4px 10px rgba(0,0,0,0.1);" onerror="this.style.display='none'">
+            <img src="/logo.jpeg" width="80" height="80" style="border-radius:15px; background:white; margin-bottom:15px;" onerror="this.style.display='none'">
             <h2 style="margin:0 0 10px 0; font-size:24px;">Kullanıcı Girişi</h2>
             <a href="/" style="color:#bfdbfe; font-size:14px; text-decoration:none; font-weight:bold;">← Vitrine Dön</a>
         </div>
         <div class="menu-grid" style="margin-top:20px;">
-            <a href="/login/admin" class="menu-card">
-                <div class="menu-icon">👑</div>
-                <span>Müdür Paneli</span>
-            </a>
-            <a href="/login/ogretmen" class="menu-card">
-                <div class="menu-icon">👩‍🏫</div>
-                <span>Öğretmen Paneli</span>
-            </a>
-            <a href="/login/veli" class="menu-card" style="border:2px solid var(--blue);">
-                <div class="menu-icon" style="background:#dbeafe; color:var(--blue);">👨‍👩‍👧</div>
-                <span>Veli Portalı (Şifreli)</span>
-            </a>
+            <a href="/login/admin" class="menu-card"><div class="menu-icon">👑</div><span>Müdür Paneli</span></a>
+            <a href="/login/ogretmen" class="menu-card"><div class="menu-icon">👩‍🏫</div><span>Öğretmen Paneli</span></a>
+            <a href="/login/veli" class="menu-card" style="border:2px solid var(--blue);"><div class="menu-icon" style="background:#dbeafe; color:var(--blue);">👨‍👩‍👧</div><span>Veli Portalı</span></a>
         </div>
     </body></html>`);
 });
 
-// ==========================================
-// MÜDÜR PANELİ GİRİŞİ
-// ==========================================
 app.get('/login/admin', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
-        <div class="header-card">
-            <h2 style="margin:0;">👑 Müdür Girişi</h2>
-            <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a>
-        </div>
+        <div class="header-card"><h2 style="margin:0;">👑 Müdür Girişi</h2><a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Geri</a></div>
         <div style="padding:30px; max-width:400px; margin:0 auto;">
             <form action="/login/admin" method="POST" class="card">
-                <label style="font-size:12px; font-weight:bold; color:#475569;">Kullanıcı Adı</label>
                 <input type="text" name="username" placeholder="Kullanıcı Adı" required>
-                <label style="font-size:12px; font-weight:bold; color:#475569;">Şifre</label>
                 <input type="password" name="password" placeholder="Şifre" required>
-                <button type="submit" class="btn-main btn-blue" style="width:100%; padding:14px; font-size:16px;">Giriş Yap</button>
+                <button type="submit" class="btn-main btn-blue" style="width:100%;">Giriş Yap</button>
             </form>
         </div>
     </body></html>`);
@@ -426,7 +432,7 @@ app.post('/login/admin', async (req, res) => {
 });
 
 // ==========================================
-// 4. MÜDÜR PANELİ (ANA YÖNETİM)
+// 4. MÜDÜR PANELİ (TAM VE AÇIK SÜRÜM)
 // ==========================================
 app.get('/admin', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
@@ -447,7 +453,8 @@ app.get('/admin', async (req, res) => {
     
     let classRows = db.classes.map(c => {
         let ageText = c.ageRange ? `<span style="color:#64748b; font-size:12px; margin-left:5px;">(${c.ageRange} Yaş)</span>` : '';
-        return `<div style="display:flex; justify-content:space-between; padding:12px; background:#f8fafc; border-radius:8px; margin-bottom:8px; align-items:center;">
+        return `
+        <div style="display:flex; justify-content:space-between; padding:12px; background:#f8fafc; border-radius:8px; margin-bottom:8px; align-items:center;">
             <span style="font-weight:bold;">🏷️ ${c.name} ${ageText}</span> 
             <div>
                 <a href="/admin/edit-class/${c.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a>
@@ -490,7 +497,6 @@ app.get('/admin', async (req, res) => {
         let attColor = attStatus === 'Geldi' ? 'green' : (attStatus === 'Gelmedi' ? 'red' : 'gray');
         let cleanPhone = s.parentPhone ? s.parentPhone.replace(/[^0-9]/g, '') : '';
         let aidatWaMsg = encodeURIComponent(`Sayın velimiz, ${s.name} isimli öğrencimizin okul aidatı eksiktir. Bilgi rica ederiz.`);
-        
         let kalan = (s.tuitionFee || 0) - (s.paidAmount || 0);
         let aidatWaBtn = (kalan > 0) && cleanPhone ? `<a href="https://wa.me/90${cleanPhone}?text=${aidatWaMsg}" target="_blank" class="btn-main btn-wa" style="padding:4px 8px; font-size:11px; margin-top:5px; display:inline-block;">💬 Aidat Uyarısı At</a>` : '';
 
@@ -528,7 +534,8 @@ app.get('/admin', async (req, res) => {
 
     let teacherList = (db.teachers || []).map(t => {
         let assignedClasses = (t.classes && t.classes.length > 0) ? t.classes.join(', ') : 'Sınıf Atanmadı';
-        return `<div style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+        return `
+        <div style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:10px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <b style="color:var(--blue); font-size:16px;">👤 ${t.username}</b><br>
                 <small style="color:var(--coral); font-weight:bold;">Sorumluluk: ${assignedClasses}</small><br>
@@ -541,11 +548,21 @@ app.get('/admin', async (req, res) => {
         </div>`;
     }).join('');
 
-    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})<br>Kontenjan: ${e.quota} - Ücret: ${e.price} TL<div style="margin-top:10px; display:flex; gap:10px;"><a href="/admin/approve-event/${e.id}" class="btn-main btn-success" style="flex:1;">✅ Onayla</a> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="flex:1;">🗑️ Reddet</a></div></div>`).join('') || '<p style="font-size:13px; color:gray;">Bekleyen etkinlik talebi yok.</p>';
+    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `
+        <div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;">
+            <b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})<br>
+            Kontenjan: ${e.quota} - Ücret: ${e.price} TL
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <a href="/admin/approve-event/${e.id}" class="btn-main btn-success" style="flex:1;">✅ Onayla</a> 
+                <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="flex:1;">🗑️ Reddet</a>
+            </div>
+        </div>
+    `).join('') || '<p style="font-size:13px; color:gray;">Bekleyen etkinlik talebi yok.</p>';
     
     let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => {
         let reservationsList = (e.reservations || []).map(r => `• ${r.name} (Yaş: ${r.age || 'Belirtilmedi'}, Tel: ${r.phone})`).join('<br>');
-        return `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:15px; border-radius:10px;">
+        return `
+        <div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:15px; border-radius:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:5px;">
                 <b>🎨 ${e.title} <span style="font-size:12px; color:gray; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> 
                 <div>
@@ -562,7 +579,15 @@ app.get('/admin', async (req, res) => {
         </div>`;
     }).join('') || '<p style="font-size:13px;">Gelecek aktif etkinlik yok.</p>';
     
-    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir etkinlik kaydı yok.</p>';
+    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `
+        <div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> 
+                <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a>
+            </div>
+            <div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div>
+        </div>
+    `).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir etkinlik kaydı yok.</p>';
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -578,7 +603,7 @@ app.get('/admin', async (req, res) => {
                 <button class="tab-btn" onclick="showTab('t-sinif', event)">🏫 Sınıflar</button>
                 <button class="tab-btn" onclick="showTab('t-vitrin', event)">🌐 Vitrin Yönetimi</button>
                 <button class="tab-btn" onclick="showTab('t-ogretmen', event)">👩‍🏫 Personel</button>
-                <button class="tab-btn" onclick="showTab('t-ayar', event)">🔑 Ayarlar</button>
+                <button class="tab-btn" onclick="showTab('t-ayar', event)">🔑 Ayarlar (WhatsApp)</button>
             </div>
 
             <div id="t-finans" class="tab-content active">
@@ -717,7 +742,7 @@ app.get('/admin', async (req, res) => {
                         <input type="text" name="title" placeholder="Gönderi Başlığı (Örn: Doğa Gezimiz)" required style="margin:0;">
                         <label style="font-size:12px; font-weight:bold; color:#475569;">Fotoğraflar (Birden Fazla Seçebilirsiniz)</label>
                         <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0;">
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Video Linki (YouTube - İsteğe Bağlı)</label>
+                        <label style="font-size:12px; font-weight:bold; color:#475569;">Video Linki (YouTube/Instagram - İsteğe Bağlı)</label>
                         <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/watch?v=..." style="margin:0;">
                         <button type="submit" class="btn-main" style="background:#f59e0b; margin-top:10px;">➕ Albüme Ekle</button>
                     </form>
@@ -754,6 +779,20 @@ app.get('/admin', async (req, res) => {
             </div>
 
             <div id="t-ayar" class="tab-content">
+                <div class="card" style="border:2px solid #25d366; background:#f0fdf4;">
+                    <h3 style="color:#166534; margin-top:0; border-bottom:2px solid #bbf7d0; padding-bottom:10px;">📱 WhatsApp Bildirim Ayarları</h3>
+                    <p style="font-size:13px; color:#166534;">Yöneticinin anında haberdar olması (Örn: Yeni Etkinlik Kaydı) için WhatsApp numaranızı bağlayın.<br><b>Nasıl Alınır?</b> Telefonunuzdan WhatsApp'a girin, <b>+34 686 43 00 24</b> veya botun belirttiği numaraya <code>I allow callmebot to send me messages</code> yazıp gönderin. Bot size bir <b>API Key</b> gönderecektir.</p>
+                    <form action="/admin/update-wa" method="POST" style="margin-bottom:0;">
+                        <label style="font-size:13px; font-weight:bold; color:#166534;">WhatsApp Numaranız</label>
+                        <input type="text" name="waPhone" placeholder="Örn: 905551234567 (Başında + olmadan)" value="${db.adminCredentials.waPhone || ''}" required style="background:white; margin-top:5px;">
+                        
+                        <label style="font-size:13px; font-weight:bold; color:#166534;">CallMeBot API Key</label>
+                        <input type="text" name="waApiKey" placeholder="Bot'tan gelen 6 haneli şifre" value="${db.adminCredentials.waApiKey || ''}" required style="background:white; margin-top:5px;">
+                        
+                        <button type="submit" class="btn-main btn-success" style="width:100%; margin-top:10px;">💾 Bildirim Ayarlarını Kaydet</button>
+                    </form>
+                </div>
+
                 <div class="card" style="border:2px solid #fecaca; background:#fef2f2;">
                     <h3 style="color:#ef4444; border-bottom:2px solid #fecaca; padding-bottom:15px; margin-top:0;">🔑 Güvenlik: Giriş Bilgilerini Değiştir</h3>
                     <form action="/admin/update-credentials" method="POST" style="margin-bottom:0; display:flex; gap:10px;">
@@ -769,8 +808,19 @@ app.get('/admin', async (req, res) => {
 });
 
 // ==========================================
-// MÜDÜR İŞLEM ROTALARI VE DÜZENLEME SAYFALARI
+// MÜDÜR POST/GET İŞLEM ROTALARI
 // ==========================================
+
+app.post('/admin/update-wa', async (req, res) => {
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
+    const db = await getDB();
+    db.adminCredentials.waPhone = req.body.waPhone;
+    db.adminCredentials.waApiKey = req.body.waApiKey;
+    db.markModified('adminCredentials');
+    await db.save();
+    res.redirect('/admin');
+});
+
 app.post('/admin/update-credentials', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
@@ -801,6 +851,15 @@ app.post('/admin/add-teacher', async (req, res) => {
     res.redirect('/admin');
 });
 
+app.get('/admin/delete-teacher/:username', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin'); 
+    const db = await getDB(); 
+    db.teachers = db.teachers.filter(t => t.username !== req.params.username); 
+    db.markModified('teachers');
+    await db.save(); 
+    res.redirect('/admin'); 
+});
+
 app.get('/admin/edit-teacher/:username', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB();
@@ -829,8 +888,8 @@ app.get('/admin/edit-teacher/:username', async (req, res) => {
                         <strong>Yetkiler:</strong><br><br>
                         <label style="cursor:pointer; margin-right:15px;"><input type="checkbox" name="yoklama" value="true" ${teacher.yoklama ? 'checked' : ''}> Yoklama</label>
                         <label style="cursor:pointer; margin-right:15px;"><input type="checkbox" name="rapor" value="true" ${teacher.rapor ? 'checked' : ''}> Karne</label>
-                        <label style="cursor:pointer; color:#ef4444; margin-right:15px;"><input type="checkbox" name="directEvent" value="true" ${teacher.directEvent ? 'checked' : ''}> <b>Sormadan Etkinlik Açma</b></label>
-                        <label style="cursor:pointer; color:#8b5cf6;"><input type="checkbox" name="vitrin" value="true" ${teacher.vitrin ? 'checked' : ''}> <b>Vitrin & Galeri Yönetme</b></label>
+                        <label style="cursor:pointer; color:#ef4444; margin-right:15px;"><input type="checkbox" name="directEvent" value="true" ${teacher.directEvent ? 'checked' : ''}> <b>Etkinlik Açma</b></label>
+                        <label style="cursor:pointer; color:#8b5cf6;"><input type="checkbox" name="vitrin" value="true" ${teacher.vitrin ? 'checked' : ''}> <b>Vitrin Yönetimi</b></label>
                     </div>
                     <button type="submit" class="btn-main btn-success" style="width:100%; padding:14px; font-size:15px;">💾 Değişiklikleri Kaydet</button>
                     <a href="/admin" style="display:block; text-align:center; margin-top:15px; color:gray; text-decoration:none; font-weight:bold;">İptal Et</a>
@@ -847,23 +906,23 @@ app.post('/admin/update-teacher/:oldUsername', async (req, res) => {
     if (tIndex > -1) {
         let selectedClasses = req.body.classes || []; 
         if (!Array.isArray(selectedClasses)) selectedClasses = [selectedClasses];
-        db.teachers[tIndex] = { username: req.body.username, password: req.body.password, classes: selectedClasses, yoklama: !!req.body.yoklama, rapor: !!req.body.rapor, directEvent: !!req.body.directEvent, vitrin: !!req.body.vitrin }; 
+        db.teachers[tIndex] = { 
+            username: req.body.username, 
+            password: req.body.password, 
+            classes: selectedClasses, 
+            yoklama: !!req.body.yoklama, 
+            rapor: !!req.body.rapor, 
+            directEvent: !!req.body.directEvent, 
+            vitrin: !!req.body.vitrin 
+        }; 
         db.markModified('teachers');
         await db.save();
     }
     res.redirect('/admin');
 });
 
-app.get('/admin/delete-teacher/:username', async (req, res) => { 
-    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin'); 
-    const db = await getDB(); 
-    db.teachers = db.teachers.filter(t => t.username !== req.params.username); 
-    db.markModified('teachers');
-    await db.save(); 
-    res.redirect('/admin'); 
-});
-
 app.post('/admin/add-class', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
     db.classes.push({ id: Date.now().toString(), name: req.body.name, ageRange: req.body.ageRange || '' }); 
     db.markModified('classes');
@@ -872,6 +931,7 @@ app.post('/admin/add-class', async (req, res) => {
 });
 
 app.get('/admin/delete-class/:id', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
     db.classes = db.classes.filter(c => c.id !== req.params.id); 
     db.markModified('classes');
@@ -923,6 +983,7 @@ app.post('/admin/update-payment/:id', async (req, res) => {
 });
 
 app.post('/admin/attendance/:id', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
     const st = db.students.find(s => s.id == req.params.id); 
     if(st) { 
@@ -935,6 +996,7 @@ app.post('/admin/attendance/:id', async (req, res) => {
 });
 
 app.post('/admin/add-student', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
     db.students.push({ 
         id: Date.now().toString(), 
@@ -957,19 +1019,21 @@ app.post('/admin/add-student', async (req, res) => {
     res.redirect('/admin'); 
 });
 
-app.get('/admin/approve-event/:id', async (req, res) => { 
+app.get('/delete-student/:id', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
-    const ev = db.events.find(e => e.id == req.params.id); 
-    if(ev) ev.status = 'approved'; 
-    db.markModified('events');
+    db.students = db.students.filter(s => s.id != req.params.id); 
+    db.markModified('students');
     await db.save(); 
     res.redirect('/admin'); 
 });
 
-app.get('/delete-student/:id', async (req, res) => { 
+app.get('/admin/approve-event/:id', async (req, res) => { 
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
-    db.students = db.students.filter(s => s.id != req.params.id); 
-    db.markModified('students');
+    const ev = db.events.find(e => e.id == req.params.id); 
+    if(ev) ev.status = 'approved'; 
+    db.markModified('events');
     await db.save(); 
     res.redirect('/admin'); 
 });
@@ -984,9 +1048,81 @@ app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     if (req.file) {
         imgPath = await uploadToImgBB(req.file.buffer);
     }
-    db.events.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath, date: req.body.date, time: req.body.time, endTime: req.body.endTime || 'Belirtilmedi', quota: parseInt(req.body.quota), price: req.body.price, status: 'approved', reservations: [], waitlist: [] });
+    db.events.push({ 
+        id: Date.now().toString(), 
+        title: req.body.title, 
+        imgUrl: imgPath, 
+        date: req.body.date, 
+        time: req.body.time, 
+        endTime: req.body.endTime || 'Belirtilmedi', 
+        quota: parseInt(req.body.quota), 
+        price: req.body.price, 
+        status: 'approved', 
+        reservations: [], 
+        waitlist: [] 
+    });
     db.markModified('events');
     await db.save(); 
+    res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
+});
+
+app.get('/manage/delete-event/:id', async (req, res) => { 
+    const db = await getDB(); 
+    if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    db.events = db.events.filter(e => e.id != req.params.id); 
+    db.markModified('events');
+    await db.save(); 
+    res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel'); 
+});
+
+app.get('/manage/edit-event/:id', async (req, res) => {
+    const db = await getDB();
+    if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    const e = db.events.find(ev => ev.id == req.params.id);
+    if(!e) return res.redirect('/');
+    res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
+        <div class="header-card"><h2>✏️ Etkinlik Düzenle</h2></div>
+        <div style="max-width:600px; margin:20px auto; padding:20px;">
+            <form action="/manage/update-event/${e.id}" method="POST" enctype="multipart/form-data" class="card">
+                <label style="font-weight:bold; font-size:13px;">Etkinlik Adı</label>
+                <input type="text" name="title" value="${e.title}" required>
+                
+                <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraf (Değiştirmek istemiyorsanız boş bırakın)</label>
+                <input type="file" name="image" accept="image/*" style="background:white;">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div><label style="font-weight:bold; font-size:13px;">Tarih</label><input type="date" name="date" value="${e.date}" required></div>
+                    <div><label style="font-weight:bold; font-size:13px;">Başlangıç</label><input type="time" name="time" value="${e.time}" required></div>
+                    <div><label style="font-weight:bold; font-size:13px;">Bitiş</label><input type="time" name="endTime" value="${e.endTime || ''}" required></div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                    <div><label style="font-weight:bold; font-size:13px;">Kontenjan (Kişi)</label><input type="number" name="quota" value="${e.quota}" required></div>
+                    <div><label style="font-weight:bold; font-size:13px;">Ücret (TL)</label><input type="number" name="price" value="${e.price}" required></div>
+                </div>
+                <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:15px; padding:15px;">💾 Değişiklikleri Kaydet</button>
+                <a href="javascript:history.back()" style="display:block; text-align:center; margin-top:15px; color:gray; text-decoration:none; font-weight:bold;">İptal Et</a>
+            </form>
+        </div>
+    </body></html>`);
+});
+
+app.post('/manage/update-event/:id', upload.single('image'), async (req, res) => {
+    const db = await getDB();
+    if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    const ev = db.events.find(e => e.id == req.params.id);
+    if(ev) {
+        ev.title = req.body.title; 
+        ev.date = req.body.date; 
+        ev.time = req.body.time; 
+        ev.endTime = req.body.endTime; 
+        ev.quota = parseInt(req.body.quota); 
+        ev.price = req.body.price;
+        if(req.file) {
+            ev.imgUrl = await uploadToImgBB(req.file.buffer);
+        }
+        db.markModified('events');
+        await db.save();
+    }
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
 });
 
@@ -1052,7 +1188,10 @@ app.post('/manage/update-branch/:id', async (req, res) => {
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     const b = db.siteContent.branches.find(x => x.id == req.params.id);
     if(b) { 
-        b.icon = req.body.icon; b.title = req.body.title; b.desc = req.body.desc; b.color = req.body.color; 
+        b.icon = req.body.icon; 
+        b.title = req.body.title; 
+        b.desc = req.body.desc; 
+        b.color = req.body.color; 
         db.markModified('siteContent');
         await db.save();
     }
@@ -1126,60 +1265,6 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
 });
 
-app.get('/manage/delete-event/:id', async (req, res) => { 
-    const db = await getDB(); 
-    if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
-    db.events = db.events.filter(e => e.id != req.params.id); 
-    db.markModified('events');
-    await db.save(); 
-    res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel'); 
-});
-
-app.get('/manage/edit-event/:id', async (req, res) => {
-    const db = await getDB();
-    if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
-    const e = db.events.find(ev => ev.id == req.params.id);
-    if(!e) return res.redirect('/');
-    res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
-        <div class="header-card"><h2>✏️ Etkinlik Düzenle</h2></div>
-        <div style="max-width:600px; margin:20px auto; padding:20px;">
-            <form action="/manage/update-event/${e.id}" method="POST" enctype="multipart/form-data" class="card">
-                <label style="font-weight:bold; font-size:13px;">Etkinlik Adı</label>
-                <input type="text" name="title" value="${e.title}" required>
-                
-                <label style="font-weight:bold; font-size:13px; color:#ea580c;">Yeni Fotoğraf (Değiştirmek istemiyorsanız boş bırakın)</label>
-                <input type="file" name="image" accept="image/*" style="background:white;">
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                    <div><label style="font-weight:bold; font-size:13px;">Tarih</label><input type="date" name="date" value="${e.date}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Başlangıç</label><input type="time" name="time" value="${e.time}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Bitiş</label><input type="time" name="endTime" value="${e.endTime || ''}" required></div>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                    <div><label style="font-weight:bold; font-size:13px;">Kontenjan (Kişi)</label><input type="number" name="quota" value="${e.quota}" required></div>
-                    <div><label style="font-weight:bold; font-size:13px;">Ücret (TL)</label><input type="number" name="price" value="${e.price}" required></div>
-                </div>
-                <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:15px; padding:15px;">💾 Değişiklikleri Kaydet</button>
-                <a href="javascript:history.back()" style="display:block; text-align:center; margin-top:15px; color:gray; text-decoration:none; font-weight:bold;">İptal Et</a>
-            </form>
-        </div>
-    </body></html>`);
-});
-
-app.post('/manage/update-event/:id', upload.single('image'), async (req, res) => {
-    const db = await getDB();
-    if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
-    const ev = db.events.find(e => e.id == req.params.id);
-    if(ev) {
-        ev.title = req.body.title; ev.date = req.body.date; ev.time = req.body.time; ev.endTime = req.body.endTime; ev.quota = parseInt(req.body.quota); ev.price = req.body.price;
-        if(req.file) {
-            ev.imgUrl = await uploadToImgBB(req.file.buffer);
-        }
-        db.markModified('events');
-        await db.save();
-    }
-    res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
-});
 
 // ==========================================
 // 5. ÖĞRETMEN PANELİ
@@ -1189,57 +1274,75 @@ app.get('/login/ogretmen', (req, res) => {
         <div class="header-card"><h2 style="margin:0;">👩‍🏫 Öğretmen Girişi</h2><a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a></div>
         <div style="padding:30px; max-width:400px; margin:0 auto;">
             <form action="/login/ogretmen" method="POST" class="card">
-                <label style="font-size:12px; font-weight:bold; color:#475569;">Kullanıcı Adı</label>
                 <input type="text" name="username" placeholder="Kullanıcı Adı" required>
-                <label style="font-size:12px; font-weight:bold; color:#475569;">Şifre</label>
                 <input type="password" name="password" placeholder="Şifre" required>
-                <button type="submit" class="btn-main btn-blue" style="width:100%; padding:14px; font-size:16px;">Giriş Yap</button>
+                <button type="submit" class="btn-main btn-blue" style="width:100%;">Giriş Yap</button>
             </form>
         </div>
     </body></html>`);
 });
 
 app.post('/login/ogretmen', async (req, res) => {
-    const db = await getDB();
+    const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.body.username && t.password === req.body.password);
-    if (teacher) { res.cookie('teacher_user', teacher.username); res.redirect('/ogretmen-panel'); } 
-    else res.send(`<script>alert("Hatalı kullanıcı adı veya şifre!"); window.location.href="/login/ogretmen";</script>`);
+    if (teacher) { 
+        res.cookie('teacher_user', teacher.username); 
+        res.redirect('/ogretmen-panel'); 
+    } else {
+        res.send(`<script>alert("Hatalı kullanıcı adı veya şifre!"); window.location.href="/login/ogretmen";</script>`);
+    }
 });
 
 app.get('/ogretmen-panel', async (req, res) => {
-    const db = await getDB();
-    const sc = db.siteContent;
-    const today = new Date().toISOString().split('T')[0];
-    const uName = req.cookies.teacher_user;
+    const db = await getDB(); 
+    const today = new Date().toISOString().split('T')[0]; 
+    const uName = req.cookies.teacher_user; 
     const teacher = db.teachers.find(t => t.username === uName);
     
     if (!teacher) return res.redirect('/login/ogretmen');
 
     let myStudents = db.students.filter(s => teacher.classes.includes(s.class));
-
     let studentOperationsHTML = myStudents.map(s => {
         let attStatus = (s.attendance && s.attendance[today]) ? s.attendance[today] : 'Belirtilmedi';
         let reportSent = (s.reports && s.reports[today]) ? true : false;
-        
         let raporFormHTML = teacher.rapor ? `
             <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #cbd5e1;">
                 ${reportSent ? `<div style="color:#10b981; font-weight:bold; font-size:13px; text-align:center; padding:10px; background:#f0fdf4; border-radius:8px;">✅ Bugünkü Karne Veliye İletildi</div>` : `
                 <form action="/teacher/send-report/${s.id}" method="POST" style="margin:0;">
                     <input type="hidden" name="date" value="${today}">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <div><label style="font-size:11px; font-weight:bold; color:#64748b;">Uyku Durumu</label><select name="uyku" required style="margin:0; padding:10px;"><option value="Uyumadı">Uyumadı</option><option value="1 Saat Uyudu">1 Saat Uyudu</option><option value="2+ Saat Uyudu">2+ Saat Uyudu</option></select></div>
-                        <div><label style="font-size:11px; font-weight:bold; color:#64748b;">Yemek Durumu</label><select name="yemek" required style="margin:0; padding:10px;"><option value="Hepsini Yedi">Hepsini Yedi</option><option value="Yarısını Yedi">Yarısını Yedi</option><option value="Yemedi">Yemedi</option></select></div>
+                        <div>
+                            <label style="font-size:11px; font-weight:bold; color:#64748b;">Uyku Durumu</label>
+                            <select name="uyku" required style="margin:0; padding:10px;">
+                                <option value="Uyumadı">Uyumadı</option>
+                                <option value="1 Saat Uyudu">1 Saat Uyudu</option>
+                                <option value="2+ Saat Uyudu">2+ Saat Uyudu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:bold; color:#64748b;">Yemek Durumu</label>
+                            <select name="yemek" required style="margin:0; padding:10px;">
+                                <option value="Hepsini Yedi">Hepsini Yedi</option>
+                                <option value="Yarısını Yedi">Yarısını Yedi</option>
+                                <option value="Yemedi">Yemedi</option>
+                            </select>
+                        </div>
                     </div>
                     <div style="margin-bottom:10px;">
                         <label style="font-size:11px; font-weight:bold; color:#64748b;">Ruh Hali</label>
-                        <select name="ruhHali" required style="margin:0; padding:10px;"><option value="Neşeli 😊">Neşeli 😊</option><option value="Sakin 😌">Sakin 😌</option><option value="Hareketli ⚡">Hareketli ⚡</option></select>
+                        <select name="ruhHali" required style="margin:0; padding:10px;">
+                            <option value="Neşeli 😊">Neşeli 😊</option>
+                            <option value="Sakin 😌">Sakin 😌</option>
+                            <option value="Hareketli ⚡">Hareketli ⚡</option>
+                        </select>
                     </div>
                     <textarea name="mesaj" placeholder="Özel veli notu..." rows="2" style="margin-bottom:10px; width:100%;"></textarea>
                     <button type="submit" class="btn-main btn-blue" style="width:100%; padding:12px;">📲 Veliye Karne Gönder</button>
                 </form>`}
             </div>` : '';
 
-        return `<div style="background:white; border:1px solid #e2e8f0; border-radius:15px; padding:20px; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.02);">
+        return `
+        <div style="background:white; border:1px solid #e2e8f0; border-radius:15px; padding:20px; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <b style="font-size:18px; color:var(--blue);">${s.name}</b><br>
@@ -1255,7 +1358,7 @@ app.get('/ogretmen-panel', async (req, res) => {
             </div>
             ${raporFormHTML}
         </div>`;
-    }).join('') || '<div class="card" style="text-align:center; color:#ef4444; font-weight:bold;">Size atanmış sınıflarda kayıtlı öğrenci yok.</div>';
+    }).join('') || '<div class="card" style="text-align:center; color:#ef4444; font-weight:bold;">Sınıfınızda öğrenci yok.</div>';
 
     let teacherClassUploadHTML = teacher.classes.map(clsName => {
         let photos = (db.classGalleries && db.classGalleries.get(clsName)) || [];
@@ -1265,29 +1368,26 @@ app.get('/ogretmen-panel', async (req, res) => {
             return `
             <div style="position:relative; display:inline-block; margin:5px; padding:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
                 <div style="display:flex; flex-wrap:wrap; max-width:140px;">${imgs}</div>
-                ${p.videoUrl ? '<div style="font-size:10px; color:var(--blue); font-weight:bold; text-align:center; margin-top:3px;">🎥 Video İçerir</div>' : ''}
-                <a href="/teacher/delete-gallery/${clsName}/${idx}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:12px; text-decoration:none; box-shadow:0 2px 5px rgba(0,0,0,0.2);">×</a>
+                ${p.videoUrl ? '<div style="font-size:10px; color:var(--blue); font-weight:bold; text-align:center; margin-top:3px;">🎥 Video</div>' : ''}
+                <a href="/teacher/delete-gallery/${clsName}/${idx}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:12px; text-decoration:none;">×</a>
             </div>`;
-        }).join('') || '<p style="font-size:12px; color:gray;">Bu sınıfa henüz paylaşım yapılmadı.</p>';
+        }).join('') || '<p style="font-size:12px; color:gray;">Henüz paylaşım yapılmadı.</p>';
 
-        return `<div class="card" style="border-top:4px solid var(--blue); margin-top:15px;">
+        return `
+        <div class="card" style="border-top:4px solid var(--blue); margin-top:15px;">
             <h4 style="margin:0 0 15px 0; color:var(--blue);">📸 ${clsName} - Albüme Gönderi Ekle</h4>
             <form action="/teacher/upload-gallery/${clsName}" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px; background:#f1f5f9; padding:15px; border-radius:10px;">
                 <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px;">Fotoğraflar (Birden fazla seçilebilir)</label>
                 <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0; padding:8px;">
                 
-                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px; margin-top:5px;">Video Linki (YouTube - İsteğe Bağlı)</label>
-                <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/watch?v=..." style="margin:0;">
+                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px; margin-top:5px;">Video Linki (YouTube / Instagram - İsteğe Bağlı)</label>
+                <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/..." style="margin:0;">
                 
                 <button type="submit" class="btn-main btn-success" style="padding:10px 15px; font-size:14px; margin-top:5px;">Sınıf Albümünde Paylaş</button>
             </form>
             <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:15px;">${photoGrid}</div>
         </div>`;
     }).join('');
-
-    let pendingEvents = db.events.filter(e => e.status === 'pending').map(e => `<div style="background:#fffbeb; padding:15px; border-left:5px solid #f59e0b; margin-bottom:10px; border-radius:10px;"><b>${e.title}</b> (${e.date} | ${e.time} - ${e.endTime || '?'})</div>`).join('') || '<p style="font-size:13px;">Bekleyen etkinlik yok.</p>';
-    let activeUpcomingEvents = db.events.filter(e => e.status === 'approved' && e.date >= today).map(e => `<div style="background:#f0fdf4; padding:15px; border-left:5px solid #10b981; margin-bottom:10px; border-radius:10px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date} | ${e.time} - ${e.endTime || '?'})</span></b> <div><button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:4px 8px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button><a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:4px 8px; font-size:11px; margin-right:5px;">Git</a><a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a><a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a></div></div>Kayıtlı: ${e.reservations.length}/${e.quota}</div>`).join('') || '<p style="font-size:13px;">Gelecek aktif etkinlik yok.</p>';
-    let pastEventsHTML = db.events.filter(e => e.status === 'approved' && e.date < today).map(e => `<div style="background:#f1f5f9; padding:15px; border-left:5px solid #94a3b8; margin-bottom:10px; border-radius:10px; color:#475569;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.title} <span style="font-size:12px; font-weight:normal;">(${e.date})</span></b> <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a></div><div style="margin-top:5px; color:var(--blue); font-weight:bold;">Katılan Kişi Sayısı: ${e.reservations.length}</div></div>`).join('') || '<p style="font-size:13px; color:gray;">Henüz geçmiş bir etkinlik kaydı yok.</p>';
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -1332,7 +1432,7 @@ app.post('/teacher/attendance/:id', async (req, res) => {
         if(!st.attendance) st.attendance = {}; 
         st.attendance[req.body.date] = req.body.status; 
     } 
-    db.markModified('students');
+    db.markModified('students'); 
     await db.save(); 
     res.redirect('/ogretmen-panel'); 
 });
@@ -1350,78 +1450,95 @@ app.post('/teacher/send-report/:id', async (req, res) => {
             timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) 
         }; 
     } 
-    db.markModified('students');
+    db.markModified('students'); 
     await db.save(); 
     res.redirect('/ogretmen-panel'); 
 });
 
 app.post('/teacher/upload-gallery/:className', upload.array('images', 10), async (req, res) => {
-    const db = await getDB();
+    const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
     if (!teacher || !teacher.classes.includes(req.params.className)) return res.redirect('/ogretmen-panel');
 
-    let imgUrls = [];
-    if (req.files && req.files.length > 0) {
-        for (let file of req.files) {
-            let url = await uploadToImgBB(file.buffer);
-            if (url) imgUrls.push(url);
-        }
+    let imgUrls = []; 
+    if (req.files && req.files.length > 0) { 
+        for (let file of req.files) { 
+            let url = await uploadToImgBB(file.buffer); 
+            if (url) imgUrls.push(url); 
+        } 
     }
     
-    if (!db.classGalleries) db.classGalleries = new Map();
+    if (!db.classGalleries) db.classGalleries = new Map(); 
     let arr = db.classGalleries.get(req.params.className) || [];
-    arr.push({ imgUrls: imgUrls, videoUrl: req.body.videoUrl || '', date: new Date().toLocaleDateString('tr-TR') });
-    db.classGalleries.set(req.params.className, arr);
-    
-    db.markModified('classGalleries');
-    await db.save();
+    arr.push({ imgUrls: imgUrls, videoUrl: req.body.videoUrl || '', date: new Date().toLocaleDateString('tr-TR') }); 
+    db.classGalleries.set(req.params.className, arr); 
+    db.markModified('classGalleries'); 
+    await db.save(); 
     res.redirect('/ogretmen-panel');
 });
 
 app.get('/teacher/delete-gallery/:className/:index', async (req, res) => {
-    const db = await getDB();
+    const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
     if (!teacher || !teacher.classes.includes(req.params.className)) return res.redirect('/ogretmen-panel');
 
-    if (db.classGalleries && db.classGalleries.get(req.params.className)) {
-        let arr = db.classGalleries.get(req.params.className);
-        arr.splice(req.params.index, 1);
-        db.classGalleries.set(req.params.className, arr);
-        db.markModified('classGalleries');
-        await db.save();
-    }
+    if (db.classGalleries && db.classGalleries.get(req.params.className)) { 
+        let arr = db.classGalleries.get(req.params.className); 
+        arr.splice(req.params.index, 1); 
+        db.classGalleries.set(req.params.className, arr); 
+        db.markModified('classGalleries'); 
+        await db.save(); 
+    } 
     res.redirect('/ogretmen-panel');
 });
 
 app.post('/teacher/request-event', upload.single('image'), async (req, res) => { 
     const db = await getDB(); 
-    const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
-    const status = (teacher && teacher.directEvent) ? 'approved' : 'pending';
-    let imgPath = '';
+    const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user); 
+    const status = (teacher && teacher.directEvent) ? 'approved' : 'pending'; 
+    let imgPath = ''; 
+    
     if (req.file) {
         imgPath = await uploadToImgBB(req.file.buffer);
     }
-    db.events.push({ id: Date.now().toString(), title: req.body.title, imgUrl: imgPath, date: req.body.date, time: req.body.time, endTime: req.body.endTime || 'Belirtilmedi', quota: parseInt(req.body.quota), price: req.body.price, status: status, reservations: [], waitlist: [] }); 
-    db.markModified('events');
+    
+    db.events.push({ 
+        id: Date.now().toString(), 
+        title: req.body.title, 
+        imgUrl: imgPath, 
+        date: req.body.date, 
+        time: req.body.time, 
+        endTime: req.body.endTime || 'Belirtilmedi', 
+        quota: parseInt(req.body.quota), 
+        price: req.body.price, 
+        status: status, 
+        reservations: [], 
+        waitlist: [] 
+    }); 
+    
+    if(status === 'pending') {
+        sendWaNotification(db, `Öğretmen Talebi: ${teacher.username}, "${req.body.title}" adlı yeni bir etkinlik açmak istiyor. Müdür panelinden onaylayın.`);
+    }
+
+    db.markModified('events'); 
     await db.save(); 
     res.send(`<script>alert("Talebiniz kaydedildi!"); window.location.href="/ogretmen-panel";</script>`); 
 });
 
 // ==========================================
-// 6. VELİ PORTALI (ŞİFRELİ SİSTEM & İLK GİRİŞ KONTROLÜ)
+// 6. VELİ PORTALI (İNDİRME BUTONLU)
 // ==========================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
-        <div class="header-card"><h2 style="margin:0;">👨‍👩‍👧 Veli Girişi</h2><a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a></div>
+        <div class="header-card">
+            <h2 style="margin:0;">👨‍👩‍👧 Veli Girişi</h2>
+            <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Geri Dön</a>
+        </div>
         <div style="padding:30px; max-width:400px; margin:0 auto;">
             <form action="/veli-giris" method="POST" class="card">
-                <label style="font-size:13px; font-weight:bold; color:#475569; display:block; margin-bottom:5px;">Kayıtlı Telefon Numaranız:</label>
-                <input type="text" name="phone" placeholder="Örn: 0555..." required>
-                
-                <label style="font-size:13px; font-weight:bold; color:#475569; display:block; margin-bottom:5px;">Şifreniz:</label>
+                <input type="text" name="phone" placeholder="Kayıtlı Veli Telefonu" required>
                 <input type="password" name="password" placeholder="Şifreniz (İlk giriş: 1234)" required>
-                
-                <button type="submit" class="btn-main btn-blue" style="width:100%; padding:14px; font-size:16px; margin-top:10px;">Giriş Yap</button>
+                <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:10px;">Giriş Yap</button>
             </form>
         </div>
     </body></html>`);
@@ -1430,53 +1547,49 @@ app.get('/login/veli', (req, res) => {
 app.post('/veli-giris', async (req, res) => {
     const db = await getDB();
     let student = db.students.find(s => s.parentPhone === req.body.phone && s.password === req.body.password);
-    
-    if (student) {
-        res.cookie('veli_phone', student.parentPhone);
+    if (student) { 
+        res.cookie('veli_phone', student.parentPhone); 
         if (student.mustChangePassword) {
-            return res.redirect('/veli-sifre-degistir');
+            return res.redirect('/veli-sifre-degistir'); 
         }
-        return res.redirect('/veli-panel');
-    } else {
-        res.send(`<script>alert("Hatalı telefon numarası veya şifre!"); window.location.href="/login/veli";</script>`);
+        return res.redirect('/veli-panel'); 
+    } else { 
+        res.send(`<script>alert("Hatalı telefon veya şifre!"); window.location.href="/login/veli";</script>`); 
     }
 });
 
-// İLK GİRİŞTE ŞİFRE DEĞİŞTİRME EKRANI
 app.get('/veli-sifre-degistir', async (req, res) => {
     if (!req.cookies.veli_phone) return res.redirect('/login/veli');
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card"><h2 style="margin:0;">🔒 Güvenlik: Şifrenizi Değiştirin</h2></div>
         <div style="padding:30px; max-width:400px; margin:20px auto;">
             <form action="/veli-sifre-guncelle" method="POST" class="card">
-                <p style="font-size:13px; color:#64748b; margin-bottom:15px;">Güvenliğiniz için ilk girişinizde şifrenizi değiştirmeniz gerekmektedir.</p>
-                <label style="font-size:13px; font-weight:bold; color:#475569;">Yeni Şifreniz</label>
+                <p style="font-size:13px; color:#64748b;">Güvenliğiniz için ilk girişinizde şifrenizi değiştirmeniz gerekmektedir.</p>
                 <input type="password" name="newPassword" placeholder="Yeni şifrenizi girin" required>
-                <button type="submit" class="btn-main btn-success" style="width:100%; padding:14px; font-size:16px; margin-top:10px;">Şifreyi Kaydet ve Devam Et</button>
+                <button type="submit" class="btn-main btn-success" style="width:100%; margin-top:10px;">Kaydet ve Devam Et</button>
             </form>
         </div>
     </body></html>`);
 });
 
 app.post('/veli-sifre-guncelle', async (req, res) => {
-    const db = await getDB();
-    const phone = req.cookies.veli_phone;
+    const db = await getDB(); 
+    const phone = req.cookies.veli_phone; 
     let student = db.students.find(s => s.parentPhone === phone);
-    
-    if (student) {
-        student.password = req.body.newPassword;
-        student.mustChangePassword = false;
-        db.markModified('students');
-        await db.save();
-        res.redirect('/veli-panel');
+    if (student) { 
+        student.password = req.body.newPassword; 
+        student.mustChangePassword = false; 
+        db.markModified('students'); 
+        await db.save(); 
+        res.redirect('/veli-panel'); 
     } else {
         res.redirect('/login/veli');
     }
 });
 
 app.get('/veli-panel', async (req, res) => {
-    const db = await getDB();
-    const phone = req.cookies.veli_phone;
+    const db = await getDB(); 
+    const phone = req.cookies.veli_phone; 
     let student = db.students.find(s => s.parentPhone === phone);
     if (!student) return res.redirect('/login/veli');
 
@@ -1484,26 +1597,30 @@ app.get('/veli-panel', async (req, res) => {
     const todayStatus = (student.attendance && student.attendance[today]) ? student.attendance[today] : 'Henüz Alınmadı';
     
     let todayReport = (student.reports && student.reports[today]) ? student.reports[today] : null;
-    let reportHTML = todayReport 
-        ? `<div style="background:#fffbeb; padding:20px; border-radius:15px; border:2px solid #fde68a;">
+    let reportHTML = todayReport ? `
+        <div style="background:#fffbeb; padding:20px; border-radius:15px; border:2px solid #fde68a;">
             <p>😴 <b>Uyku:</b> ${todayReport.uyku}</p>
             <p>🍽️ <b>Yemek:</b> ${todayReport.yemek}</p>
             <p>🎭 <b>Ruh Hali:</b> ${todayReport.ruhHali}</p>
             ${todayReport.mesaj ? `<p style="background:white; padding:10px; border-radius:8px;"><i>"${todayReport.mesaj}"</i></p>` : ''}
-           </div>` 
-        : `<p style="text-align:center; color:gray;">Bugünkü karne henüz girilmedi.</p>`;
-
+        </div>` : `<p style="text-align:center; color:gray;">Bugünkü karne henüz girilmedi.</p>`;
+    
     let kalanTutar = (student.tuitionFee || 0) - (student.paidAmount || 0);
 
     const photos = (db.classGalleries && db.classGalleries.get(student.class)) || [];
     const galleryHTML = photos.map(p => {
-        let imgs = (p.imgUrls || []).map(u => `<img src="${u}">`).join('');
-        if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}">`;
+        let rawImgs = (p.imgUrls && p.imgUrls.length > 0) ? p.imgUrls : (p.imgUrl ? [p.imgUrl] : []);
+        let imgsHTML = rawImgs.map(u => `
+            <div class="img-container">
+                <img src="${u}">
+                <a href="/download-image?url=${encodeURIComponent(u)}" class="download-btn">⬇️ İndir</a>
+            </div>
+        `).join('');
         let vid = getEmbedHTML(p.videoUrl);
         return `
         <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
             <div style="font-size:12px; color:gray; text-align:right; margin-bottom:10px; font-weight:bold;">📅 ${p.date}</div>
-            <div class="horizontal-slider">${imgs}</div>
+            <div class="horizontal-slider">${imgsHTML}</div>
             ${vid}
         </div>`;
     }).join('') || '<p style="text-align:center; color:gray;">Öğretmeniniz henüz bu sınıfa gönderi eklemedi.</p>';
@@ -1541,4 +1658,4 @@ app.get('/veli-panel', async (req, res) => {
     </body></html>`);
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK FİNAL SÜRÜM (ŞİFRELİ VELİ & METİN GÜNCELLEMESİ): http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ (BİLDİRİM VE İNDİRME AKTİF): http://localhost:${PORT}`));
