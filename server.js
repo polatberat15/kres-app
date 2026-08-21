@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ FİNAL SÜRÜMÜ ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ FİNAL SÜRÜM (GÜNLÜK AİDAT HESAPLAMALI) ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -51,7 +51,7 @@ const DataSchema = new mongoose.Schema({
     students: { type: Array, default: [] },
     teachers: { type: Array, default: [] },
     events: { type: Array, default: [] },
-    classGalleries: { type: Map, of: Array, default: {} }
+    classGalleries: { type: Array, default: [] }
 });
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
@@ -64,7 +64,7 @@ async function getDB() {
     
     if (!doc.siteContent.branches) doc.siteContent.branches = [];
     if (!doc.gallery) doc.gallery = [];
-    if (!doc.classGalleries) doc.classGalleries = new Map();
+    if (!Array.isArray(doc.classGalleries)) doc.classGalleries = [];
     
     doc.students.forEach(s => {
         if (!s.attendance) s.attendance = {};
@@ -88,7 +88,6 @@ async function getDB() {
     return doc;
 }
 
-// WhatsApp Bildirim Gönderici Fonksiyon
 async function sendWaNotification(db, message) {
     const phone = db.adminCredentials.waPhone;
     const apikey = db.adminCredentials.waApiKey;
@@ -138,7 +137,6 @@ function getEmbedHTML(url) {
     return `<a href="${url}" target="_blank" class="btn-main btn-blue" style="margin-top:10px; display:block; text-align:center;">🎥 Videoyu İzle</a>`;
 }
 
-// Resim İndirme Proxy Servisi (CORS Sorununu Çözer)
 app.get('/download-image', async (req, res) => {
     try {
         const response = await axios.get(req.query.url, { responseType: 'arraybuffer' });
@@ -146,7 +144,7 @@ app.get('/download-image', async (req, res) => {
         res.setHeader('Content-Type', response.headers['content-type']);
         res.send(response.data);
     } catch (e) {
-        res.redirect(req.query.url); // Hata olursa direkt URL'ye yönlendir
+        res.redirect(req.query.url);
     }
 });
 
@@ -202,6 +200,7 @@ const portalTheme = `
 
 const iconWhatsapp = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.198-.198.347-.764.966-.937 1.164-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>`;
 const iconInstagram = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`;
+const iconFacebook = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>`;
 
 // ==========================================
 // 1. ANA VİTRİN SAYFASI
@@ -268,6 +267,7 @@ app.get('/', async (req, res) => {
         .hero { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 60px 20px; text-align: center; border-radius: 0 0 40px 40px; }
         .hero h1 { font-size: 32px; margin-bottom: 15px; font-weight: 900; }
         .social-bar a { color: white; text-decoration: none; margin: 5px; font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 20px; display:inline-flex; align-items:center; gap:8px; transition:0.3s; }
+        .social-bar a:hover { transform: scale(1.05); }
         .floating-whatsapp { position: fixed !important; bottom: 30px !important; right: 30px !important; background: #25d366 !important; color: white !important; border-radius: 50px !important; padding: 14px 24px !important; display: flex !important; align-items: center !important; gap: 10px !important; font-weight: bold !important; font-size: 15px !important; text-decoration: none !important; z-index: 99999 !important; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4) !important; transition: 0.3s !important; }
     </style></head><body>
     
@@ -295,6 +295,7 @@ app.get('/', async (req, res) => {
 
         <div class="social-bar" style="margin-top:25px; display:flex; justify-content:center; flex-wrap:wrap;">
             ${sc.instagramUrl ? `<a href="${sc.instagramUrl}" target="_blank" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);">${iconInstagram} Instagram</a>` : ''}
+            ${sc.facebookUrl ? `<a href="${sc.facebookUrl}" target="_blank" style="background: #1877f2;">${iconFacebook} Facebook</a>` : ''}
         </div>
     </div>
 
@@ -320,7 +321,7 @@ app.get('/', async (req, res) => {
 });
 
 // ==========================================
-// ETKİNLİK PAYLAŞILABİLİR ÖZEL LİNK SAYFASI
+// ETKİNLİK DETAY
 // ==========================================
 app.get('/atolye-detay/:id', async (req, res) => {
     const db = await getDB();
@@ -362,10 +363,7 @@ app.post('/atolye-rezervasyon/:id', async (req, res) => {
     const ev = db.events.find(e => e.id == req.params.id); 
     if(ev && ev.reservations.length < ev.quota) { 
         ev.reservations.push({ name: req.body.name, age: req.body.age, phone: req.body.phone }); 
-        
-        // WA BİLDİRİMİ GÖNDERİMİ
         sendWaNotification(db, `✅ YENİ KAYIT: ${req.body.name} isimli öğrenci (Yaş:${req.body.age}) "${ev.title}" etkinliğine kayıt oldu! İletişim: ${req.body.phone}`);
-        
         db.markModified('events');
         await db.save(); 
         res.send(`<script>alert("Rezervasyon başarıyla oluşturuldu!"); window.location.href="/";</script>`); 
@@ -380,10 +378,7 @@ app.post('/atolye-talep/:id', async (req, res) => {
     if(ev) { 
         if(!ev.waitlist) ev.waitlist = []; 
         ev.waitlist.push({ name: req.body.name, phone: req.body.phone }); 
-        
-        // WA BİLDİRİMİ GÖNDERİMİ
         sendWaNotification(db, `⚠️ YENİ SINIF TALEBİ: "${ev.title}" kontenjanı dolduğu için ${req.body.name} isimli veli talep bıraktı. İletişim: ${req.body.phone}`);
-        
         db.markModified('events');
         await db.save(); 
         res.send(`<script>alert("Talebiniz alındı! Yeni sınıf açıldığında haber vereceğiz."); window.location.href="/";</script>`); 
@@ -391,7 +386,7 @@ app.post('/atolye-talep/:id', async (req, res) => {
 });
 
 // ==========================================
-// KULLANICI GİRİŞ SEÇİMİ VE GİRİŞ EKRANLARI
+// KULLANICI GİRİŞLERİ
 // ==========================================
 app.get('/portal-giris', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -432,7 +427,7 @@ app.post('/login/admin', async (req, res) => {
 });
 
 // ==========================================
-// 4. MÜDÜR PANELİ (TAM VE AÇIK SÜRÜM)
+// 4. MÜDÜR PANELİ
 // ==========================================
 app.get('/admin', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
@@ -464,8 +459,8 @@ app.get('/admin', async (req, res) => {
     }).join('');
 
     let galleryRows = (sc.gallery || []).map(g => {
-        let imgs = (g.imgUrls || []).map(u => `<img src="${u}" style="width:30px; height:30px; border-radius:3px; object-fit:cover;">`).join('');
-        if(g.imgUrl && (!g.imgUrls || g.imgUrls.length === 0)) imgs = `<img src="${g.imgUrl}" style="width:30px; height:30px; border-radius:3px; object-fit:cover;">`;
+        let rawImgs = (g.imgUrls && g.imgUrls.length > 0) ? g.imgUrls : (g.imgUrl ? [g.imgUrl] : []);
+        let imgs = rawImgs.map(u => `<img src="${u}" style="width:30px; height:30px; border-radius:3px; object-fit:cover;">`).join('');
         return `
         <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-top:10px; align-items:center;">
             <div style="display:flex; align-items:center; gap:10px;">
@@ -511,7 +506,7 @@ app.get('/admin', async (req, res) => {
             </td>
             <td>
                 <div style="background:#f8fafc; padding:8px; border-radius:8px;">
-                    <span style="font-size:12px; color:#475569;">Toplam Aidat: <b>${s.tuitionFee} TL</b></span>
+                    <span style="font-size:12px; color:#475569;">Toplam Aidat Borcu: <b style="color:#1e3a8a;">${s.tuitionFee} TL</b></span>
                     <form action="/admin/update-payment/${s.id}" method="POST" style="display:flex; align-items:center; gap:5px; margin:5px 0;">
                         <input type="number" name="paidAmount" value="${s.paidAmount}" placeholder="Ödenen" style="width:75px; padding:6px; margin:0; font-size:12px;">
                         <button type="submit" class="btn-main btn-success" style="padding:6px 10px; font-size:11px;">Kaydet</button>
@@ -603,7 +598,7 @@ app.get('/admin', async (req, res) => {
                 <button class="tab-btn" onclick="showTab('t-sinif', event)">🏫 Sınıflar</button>
                 <button class="tab-btn" onclick="showTab('t-vitrin', event)">🌐 Vitrin Yönetimi</button>
                 <button class="tab-btn" onclick="showTab('t-ogretmen', event)">👩‍🏫 Personel</button>
-                <button class="tab-btn" onclick="showTab('t-ayar', event)">🔑 Ayarlar (WhatsApp)</button>
+                <button class="tab-btn" onclick="showTab('t-ayar', event)">🔑 Ayarlar</button>
             </div>
 
             <div id="t-finans" class="tab-content active">
@@ -627,9 +622,9 @@ app.get('/admin', async (req, res) => {
             </div>
 
             <div id="t-ogrenci" class="tab-content">
-                <div class="card">
-                    <h3 style="color:var(--blue); border-bottom:2px solid #f1f5f9; padding-bottom:15px; margin-top:0;">👦 Yeni Öğrenci Kaydı</h3>
-                    <form action="/admin/add-student" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:20px;">
+                <div class="card" style="border-top:5px solid #3b82f6;">
+                    <h3 style="color:var(--blue); margin-top:0;">👦 Yeni Öğrenci Kaydı</h3>
+                    <form action="/admin/add-student" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:10px;">
                         <input type="text" name="name" placeholder="Öğrenci Adı Soyadı" required style="margin:0;">
                         <select name="class" style="margin:0;">${classOpts}</select>
                         <input type="text" name="parentPhone" placeholder="Veli Telefonu" required style="margin:0;">
@@ -637,7 +632,13 @@ app.get('/admin', async (req, res) => {
                         <input type="text" name="allergy" placeholder="Alerji Durumu (Opsiyonel)" style="margin:0;">
                         <div style="display:flex; align-items:center; gap:5px;"><small>Kayıt:</small> <input type="date" name="registrationDate" required style="margin:0;"></div>
                         <div style="display:flex; align-items:center; gap:5px;"><small>Başlama:</small> <input type="date" name="startDate" required style="margin:0;"></div>
-                        <input type="number" name="tuitionFee" placeholder="Toplam Aidat Bedeli (TL)" required style="margin:0;">
+                        <input type="number" name="baseFee" placeholder="Aylık Tam Aidat Bedeli (TL)" required style="margin:0;">
+                        
+                        <label style="font-size:12px; display:flex; align-items:center; gap:5px; grid-column: 1 / -1; cursor:pointer; background:#eff6ff; padding:10px; border-radius:8px; border:1px solid #bfdbfe; color:#1e3a8a; font-weight:bold; margin-top:5px;">
+                            <input type="checkbox" name="prorate" value="true" checked style="width:auto; margin:0;">
+                            Öğrenci ay ortasında başlıyorsa, ilk ay aidatını başlama tarihine göre (gün bazlı) otomatik hesapla
+                        </label>
+                        
                         <button type="submit" class="btn-main btn-success" style="grid-column: 1 / -1; margin-top:10px;">➕ Öğrenciyi Kaydet</button>
                     </form>
                 </div>
@@ -781,13 +782,13 @@ app.get('/admin', async (req, res) => {
             <div id="t-ayar" class="tab-content">
                 <div class="card" style="border:2px solid #25d366; background:#f0fdf4;">
                     <h3 style="color:#166534; margin-top:0; border-bottom:2px solid #bbf7d0; padding-bottom:10px;">📱 WhatsApp Bildirim Ayarları</h3>
-                    <p style="font-size:13px; color:#166534;">Yöneticinin anında haberdar olması (Örn: Yeni Etkinlik Kaydı) için WhatsApp numaranızı bağlayın.<br><b>Nasıl Alınır?</b> Telefonunuzdan WhatsApp'a girin, <b>+34 686 43 00 24</b> veya botun belirttiği numaraya <code>I allow callmebot to send me messages</code> yazıp gönderin. Bot size bir <b>API Key</b> gönderecektir.</p>
+                    <p style="font-size:13px; color:#166534;">Yöneticinin anında haberdar olması için WhatsApp numaranızı bağlayın.<br><b>Nasıl Alınır?</b> CallMeBot sitesindeki numaraya <code>I allow callmebot to send me messages</code> yazıp gönderin ve gelen API Key'i girin.</p>
                     <form action="/admin/update-wa" method="POST" style="margin-bottom:0;">
                         <label style="font-size:13px; font-weight:bold; color:#166534;">WhatsApp Numaranız</label>
-                        <input type="text" name="waPhone" placeholder="Örn: 905551234567 (Başında + olmadan)" value="${db.adminCredentials.waPhone || ''}" required style="background:white; margin-top:5px;">
+                        <input type="text" name="waPhone" placeholder="Örn: 905551234567" value="${db.adminCredentials.waPhone || ''}" required style="background:white; margin-top:5px;">
                         
                         <label style="font-size:13px; font-weight:bold; color:#166534;">CallMeBot API Key</label>
-                        <input type="text" name="waApiKey" placeholder="Bot'tan gelen 6 haneli şifre" value="${db.adminCredentials.waApiKey || ''}" required style="background:white; margin-top:5px;">
+                        <input type="text" name="waApiKey" placeholder="Bot'tan gelen API şifresi" value="${db.adminCredentials.waApiKey || ''}" required style="background:white; margin-top:5px;">
                         
                         <button type="submit" class="btn-main btn-success" style="width:100%; margin-top:10px;">💾 Bildirim Ayarlarını Kaydet</button>
                     </form>
@@ -995,9 +996,28 @@ app.post('/admin/attendance/:id', async (req, res) => {
     res.redirect('/admin'); 
 });
 
+// AİDAT OTOMATİK HESAPLAMA (KISTELYEVM) İŞLEMİ
 app.post('/admin/add-student', async (req, res) => { 
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB(); 
+    
+    let baseFee = parseInt(req.body.baseFee) || 0;
+    let finalFee = baseFee;
+
+    if (req.body.prorate === 'true' && req.body.startDate) {
+        let start = new Date(req.body.startDate);
+        let year = start.getFullYear();
+        let month = start.getMonth() + 1;
+        let day = start.getDate();
+        let daysInMonth = new Date(year, month, 0).getDate();
+        let remainingDays = daysInMonth - day + 1;
+        
+        if(remainingDays < 0) remainingDays = 0;
+        if(remainingDays > daysInMonth) remainingDays = daysInMonth;
+        
+        finalFee = Math.round((baseFee / daysInMonth) * remainingDays);
+    }
+
     db.students.push({ 
         id: Date.now().toString(), 
         name: req.body.name, 
@@ -1008,7 +1028,7 @@ app.post('/admin/add-student', async (req, res) => {
         allergy: req.body.allergy || 'Yok', 
         registrationDate: req.body.registrationDate,
         startDate: req.body.startDate,
-        tuitionFee: parseInt(req.body.tuitionFee) || 0,
+        tuitionFee: finalFee,
         paidAmount: 0,
         feePaid: false, 
         attendance: {}, 
@@ -1361,15 +1381,18 @@ app.get('/ogretmen-panel', async (req, res) => {
     }).join('') || '<div class="card" style="text-align:center; color:#ef4444; font-weight:bold;">Sınıfınızda öğrenci yok.</div>';
 
     let teacherClassUploadHTML = teacher.classes.map(clsName => {
-        let photos = (db.classGalleries && db.classGalleries.get(clsName)) || [];
-        let photoGrid = photos.map((p, idx) => {
+        let photos = (db.classGalleries || []).filter(item => item && item.className === clsName);
+        let photoGrid = photos.map(p => {
             let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin:2px;">`).join('');
             if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">`;
+            
+            if(!imgs && !p.videoUrl) return '';
+
             return `
             <div style="position:relative; display:inline-block; margin:5px; padding:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
                 <div style="display:flex; flex-wrap:wrap; max-width:140px;">${imgs}</div>
                 ${p.videoUrl ? '<div style="font-size:10px; color:var(--blue); font-weight:bold; text-align:center; margin-top:3px;">🎥 Video</div>' : ''}
-                <a href="/teacher/delete-gallery/${clsName}/${idx}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:12px; text-decoration:none;">×</a>
+                <a href="/teacher/delete-gallery/${p.id}" style="position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:12px; text-decoration:none;">×</a>
             </div>`;
         }).join('') || '<p style="font-size:12px; color:gray;">Henüz paylaşım yapılmadı.</p>';
 
@@ -1409,13 +1432,13 @@ app.get('/ogretmen-panel', async (req, res) => {
                         <input type="text" name="title" placeholder="Etkinlik Adı" required>
                         <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                            <div><label>Tarih</label><input type="date" name="date" required></div>
-                            <div><label>Başlama</label><input type="time" name="time" required></div>
-                            <div><label>Bitiş</label><input type="time" name="endTime" required></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Tarih</label><input type="date" name="date" required></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Başlama</label><input type="time" name="time" required></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Bitiş</label><input type="time" name="endTime" required></div>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                            <div><label>Kontenjan</label><input type="number" name="quota" required></div>
-                            <div><label>Ücret (TL)</label><input type="number" name="price" required></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Kontenjan</label><input type="number" name="quota" required></div>
+                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Ücret (TL)</label><input type="number" name="price" required></div>
                         </div>
                         <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px;">${teacher.directEvent ? 'Etkinliği Doğrudan Yayınla' : 'Talebi İlet'}</button>
                     </form>
@@ -1468,24 +1491,30 @@ app.post('/teacher/upload-gallery/:className', upload.array('images', 10), async
         } 
     }
     
-    if (!db.classGalleries) db.classGalleries = new Map(); 
-    let arr = db.classGalleries.get(req.params.className) || [];
-    arr.push({ imgUrls: imgUrls, videoUrl: req.body.videoUrl || '', date: new Date().toLocaleDateString('tr-TR') }); 
-    db.classGalleries.set(req.params.className, arr); 
-    db.markModified('classGalleries'); 
-    await db.save(); 
+    if (!Array.isArray(db.classGalleries)) db.classGalleries = [];
+    
+    if (imgUrls.length > 0 || req.body.videoUrl) {
+        db.classGalleries.push({
+            id: Date.now().toString(),
+            className: req.params.className,
+            imgUrls: imgUrls,
+            videoUrl: req.body.videoUrl || '',
+            date: new Date().toLocaleDateString('tr-TR')
+        });
+        db.markModified('classGalleries'); 
+        await db.save();
+    }
+    
     res.redirect('/ogretmen-panel');
 });
 
-app.get('/teacher/delete-gallery/:className/:index', async (req, res) => {
+app.get('/teacher/delete-gallery/:id', async (req, res) => {
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
-    if (!teacher || !teacher.classes.includes(req.params.className)) return res.redirect('/ogretmen-panel');
+    if (!teacher) return res.redirect('/ogretmen-panel');
 
-    if (db.classGalleries && db.classGalleries.get(req.params.className)) { 
-        let arr = db.classGalleries.get(req.params.className); 
-        arr.splice(req.params.index, 1); 
-        db.classGalleries.set(req.params.className, arr); 
+    if (Array.isArray(db.classGalleries)) { 
+        db.classGalleries = db.classGalleries.filter(x => x.id !== req.params.id);
         db.markModified('classGalleries'); 
         await db.save(); 
     } 
@@ -1607,7 +1636,7 @@ app.get('/veli-panel', async (req, res) => {
     
     let kalanTutar = (student.tuitionFee || 0) - (student.paidAmount || 0);
 
-    const photos = (db.classGalleries && db.classGalleries.get(student.class)) || [];
+    const photos = (db.classGalleries || []).filter(item => item && item.className === student.class);
     const galleryHTML = photos.map(p => {
         let rawImgs = (p.imgUrls && p.imgUrls.length > 0) ? p.imgUrls : (p.imgUrl ? [p.imgUrl] : []);
         let imgsHTML = rawImgs.map(u => `
@@ -1658,4 +1687,4 @@ app.get('/veli-panel', async (req, res) => {
     </body></html>`);
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ (BİLDİRİM VE İNDİRME AKTİF): http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ: http://localhost:${PORT}`));
