@@ -166,7 +166,7 @@ const portalTheme = `
     .download-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(2px); transition:0.2s; }
     .download-btn:hover { background: rgba(0,0,0,0.8); }
 
-    .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 20px auto; max-width: 500px; color: #92400e; font-size: 13px; text-align: left; }
+    .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 15px auto; max-width: 500px; color: #92400e; font-size: 13px; text-align: left; box-sizing: border-box; }
 </style>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/logo.jpeg">
@@ -193,13 +193,13 @@ const iconFacebook = `<svg width="20" height="20" viewBox="0 0 24 24" fill="curr
 const pwaInstallInfo = `
     <div class="install-box">
         <b>📱 Uygulamayı Telefonunuza (Ana Ekrana) Nasıl Eklersiniz?</b><br>
-        • <b>iPhone (Safari):</b> Alttaki "Paylaş" (kare ve yukarı ok) ikonuna basın ve ardından <b>"Ana Ekrana Ekle"</b> seçeneğini seçin.<br>
+        • <b>iPhone (Safari):</b> Alttaki "Paylaş" ikonuna basın ve ardından <b>"Ana Ekrana Ekle"</b> seçeneğini seçin.<br>
         • <b>Android (Chrome):</b> Sağ üstteki üç noktaya basın ve <b>"Uygulamayı Yükle"</b> veya <b>"Ana Ekrana Ekle"</b> seçeneğine tıklayın.
     </div>
 `;
 
 // ============================================================================
-// 1. ANA VİTRİN SAYFASI
+// 1. ANA VİTRİN SAYFASI (PWA BİLGİLENDİRMESİ EN ÜSTTE)
 // ============================================================================
 app.get('/', async (req, res) => {
     const db = await getDB();
@@ -275,6 +275,11 @@ app.get('/', async (req, res) => {
         <a href="/portal-giris" class="btn-main" style="background:#e11d48; display:flex; align-items:center; gap:5px;">🔒 Kullanıcı Girişi</a>
     </div>
 
+    <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
+    <div style="max-width:1100px; margin:20px auto 0 auto; padding:0 20px;">
+        ${pwaInstallInfo}
+    </div>
+
     <div class="hero">
         <div style="background:#e11d48; display:inline-block; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:bold; margin-bottom:15px;">${sc.badgeText}</div>
         <h1>${sc.heroTitle.replace(/\n/g, '<br>')}</h1>
@@ -309,10 +314,6 @@ app.get('/', async (req, res) => {
         <h2 style="text-align:center; color:var(--blue); margin:50px 0 30px 0; font-size:28px;">📸 Geçmiş Etkinlikler & Akademi Albümü</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
             ${galleryHTML || '<p style="text-align:center; color:gray; width:100%;">Galeride henüz paylaşım yok.</p>'}
-        </div>
-        
-        <div style="text-align:center; margin-top:40px;">
-            ${pwaInstallInfo}
         </div>
     </div>
 
@@ -386,7 +387,7 @@ app.post('/atolye-talep/:id', async (req, res) => {
 });
 
 // ============================================================================
-// 3. GİRİŞ KAPISI VE GİRİŞ EKRANLARI (PWA BİLGİLENDİRMESİ DAHİL)
+// 3. GİRİŞ KAPISI (PWA BİLGİLENDİRMESİ EN ÜSTTE)
 // ============================================================================
 app.get('/portal-giris', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -395,13 +396,16 @@ app.get('/portal-giris', (req, res) => {
             <h2 style="margin:0 0 10px 0; font-size:24px;">Kullanıcı Girişi</h2>
             <a href="/" style="color:#bfdbfe; font-size:14px; text-decoration:none; font-weight:bold;">← Vitrine Dön</a>
         </div>
-        <div class="menu-grid" style="margin-top:20px;">
+        
+        <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
+        <div style="max-width:450px; margin:20px auto 0 auto; padding:0 15px;">
+            ${pwaInstallInfo}
+        </div>
+
+        <div class="menu-grid" style="margin-top:15px;">
             <a href="/login/admin" class="menu-card"><div class="menu-icon">👑</div><span>Müdür Paneli</span></a>
             <a href="/login/ogretmen" class="menu-card"><div class="menu-icon">👩‍🏫</div><span>Öğretmen Paneli</span></a>
             <a href="/login/veli" class="menu-card" style="border:2px solid var(--blue);"><div class="menu-icon" style="background:#dbeafe; color:var(--blue);">👨‍👩‍👧</div><span>Veli Portalı</span></a>
-        </div>
-        <div style="text-align:center; margin-top:30px;">
-            ${pwaInstallInfo}
         </div>
     </body></html>`);
 });
@@ -1295,7 +1299,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ VE SINIF İŞLEMLERİ (PWA BİLGİLENDİRMESİ DAHİL)
+// 7. ÖĞRETMEN PANELİ VE SINIF İŞLEMLERİ (PWA BİLGİLENDİRMESİ EN ÜSTTE)
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1303,15 +1307,18 @@ app.get('/login/ogretmen', (req, res) => {
             <h2 style="margin:0;">👩‍🏫 Öğretmen Girişi</h2>
             <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a>
         </div>
-        <div style="padding:30px; max-width:400px; margin:0 auto;">
+        
+        <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
+        <div style="max-width:400px; margin:20px auto 0 auto; padding:0 15px;">
+            ${pwaInstallInfo}
+        </div>
+
+        <div style="padding:20px 30px; max-width:400px; margin:0 auto;">
             <form action="/login/ogretmen" method="POST" class="card">
                 <input type="text" name="username" placeholder="Kullanıcı Adı" required>
                 <input type="password" name="password" placeholder="Şifre" required>
                 <button type="submit" class="btn-main btn-blue" style="width:100%;">Giriş Yap</button>
             </form>
-        </div>
-        <div style="text-align:center; margin-top:20px;">
-            ${pwaInstallInfo}
         </div>
     </body></html>`);
 });
@@ -1572,7 +1579,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
 });
 
 // ============================================================================
-// 8. VELİ PORTALI (PWA BİLGİLENDİRMESİ DAHİL)
+// 8. VELİ PORTALI (PWA BİLGİLENDİRMESİ EN ÜSTTE)
 // ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1580,15 +1587,18 @@ app.get('/login/veli', (req, res) => {
             <h2 style="margin:0;">👨‍👩‍👧 Veli Girişi</h2>
             <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Geri Dön</a>
         </div>
-        <div style="padding:30px; max-width:400px; margin:0 auto;">
+        
+        <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
+        <div style="max-width:400px; margin:20px auto 0 auto; padding:0 15px;">
+            ${pwaInstallInfo}
+        </div>
+
+        <div style="padding:20px 30px; max-width:400px; margin:0 auto;">
             <form action="/veli-giris" method="POST" class="card">
                 <input type="text" name="phone" placeholder="Kayıtlı Veli Telefonu" required>
                 <input type="password" name="password" placeholder="Şifreniz (İlk giriş: 1234)" required>
                 <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:10px;">Giriş Yap</button>
             </form>
-        </div>
-        <div style="text-align:center; margin-top:20px;">
-            ${pwaInstallInfo}
         </div>
     </body></html>`);
 });
