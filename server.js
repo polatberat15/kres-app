@@ -1,4 +1,4 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ FİNAL SÜRÜM (GÜNLÜK AİDAT HESAPLAMALI) ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - EKSİKSİZ, HATASIZ FİNAL SÜRÜM ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -18,7 +18,7 @@ app.use(express.static(__dirname));
 const upload = multer({ storage: multer.memoryStorage() });
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/kres";
-const IMGBB_KEY = process.env.IMGBB_KEY || "a3bc24a69cf0c9298a88afa4827ff5ea";
+const IMGBB_DEFAULT_KEY = "a3bc24a69cf0c9298a88afa4827ff5ea";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('☁️ Kalıcı MongoDB Veritabanına Başarıyla Bağlanıldı!'))
@@ -29,7 +29,8 @@ const DataSchema = new mongoose.Schema({
         username: { type: String, default: "admin" }, 
         password: { type: String, default: "123" },
         waPhone: { type: String, default: "" },
-        waApiKey: { type: String, default: "" }
+        waApiKey: { type: String, default: "" },
+        imgbbApiKey: { type: String, default: "" }
     },
     siteContent: {
         badgeText: { type: String, default: "✨ 2026 - 2027 Erken Kayıtlarımız Başlamıştır" },
@@ -51,20 +52,18 @@ const DataSchema = new mongoose.Schema({
     students: { type: Array, default: [] },
     teachers: { type: Array, default: [] },
     events: { type: Array, default: [] },
-    classGalleries: { type: Array, default: [] }
+    classAlbums: { type: Array, default: [] } // ESKİ BOZUK VERİYİ SIFIRLAMAK İÇİN İSMİ DEĞİŞTİRİLDİ
 });
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
 
 async function getDB() {
     let doc = await DataModel.findOne();
-    if (!doc) {
-        doc = await DataModel.create({});
-    }
+    if (!doc) doc = await DataModel.create({});
     
     if (!doc.siteContent.branches) doc.siteContent.branches = [];
     if (!doc.gallery) doc.gallery = [];
-    if (!Array.isArray(doc.classGalleries)) doc.classGalleries = [];
+    if (!Array.isArray(doc.classAlbums)) doc.classAlbums = [];
     
     doc.students.forEach(s => {
         if (!s.attendance) s.attendance = {};
@@ -101,14 +100,15 @@ async function sendWaNotification(db, message) {
     }
 }
 
-async function uploadToImgBB(fileBuffer) {
+async function uploadToImgBB(fileBuffer, apiKey) {
+    let key = apiKey || IMGBB_DEFAULT_KEY;
     try {
         const form = new FormData();
         form.append('image', fileBuffer.toString('base64'));
-        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, form, { headers: form.getHeaders() });
+        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${key}`, form, { headers: form.getHeaders() });
         return response.data.data.url;
     } catch (e) {
-        console.error("ImgBB Yükleme Hatası:", e);
+        console.error("ImgBB Yükleme Hatası:", e.message);
         return "";
     }
 }
@@ -177,8 +177,6 @@ const portalTheme = `
     .horizontal-slider img { width: 220px; height: 160px; object-fit: cover; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .download-btn { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(2px); transition:0.2s; }
     .download-btn:hover { background: rgba(0,0,0,0.8); }
-
-    .install-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px 20px; border-radius: 15px; margin: 20px auto; max-width: 600px; color: #92400e; font-size:14px; }
 </style>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/logo.jpeg">
@@ -636,7 +634,7 @@ app.get('/admin', async (req, res) => {
                         
                         <label style="font-size:12px; display:flex; align-items:center; gap:5px; grid-column: 1 / -1; cursor:pointer; background:#eff6ff; padding:10px; border-radius:8px; border:1px solid #bfdbfe; color:#1e3a8a; font-weight:bold; margin-top:5px;">
                             <input type="checkbox" name="prorate" value="true" checked style="width:auto; margin:0;">
-                            Öğrenci ay ortasında başlıyorsa, ilk ay aidatını başlama tarihine göre (gün bazlı) otomatik hesapla
+                            Öğrenci ay ortasında başlıyorsa, ilk ay aidatını başlama tarihine göre (kıstelyevm) otomatik hesapla
                         </label>
                         
                         <button type="submit" class="btn-main btn-success" style="grid-column: 1 / -1; margin-top:10px;">➕ Öğrenciyi Kaydet</button>
@@ -780,21 +778,30 @@ app.get('/admin', async (req, res) => {
             </div>
 
             <div id="t-ayar" class="tab-content">
-                <div class="card" style="border:2px solid #25d366; background:#f0fdf4;">
+                <div class="card" style="border:2px solid #3b82f6; background:#eff6ff;">
+                    <h3 style="color:#1e3a8a; margin-top:0; border-bottom:2px solid #bfdbfe; padding-bottom:10px;">☁️ Fotoğraf Depolama Ayarları (ÖNEMLİ)</h3>
+                    <p style="font-size:13px; color:#1e3a8a;">Sınırsız fotoğraf yükleyebilmek için ImgBB API Key girmeniz gerekir. Yüklemelerin hata vermemesi için <a href="https://api.imgbb.com/" target="_blank">api.imgbb.com</a> adresinden ücretsiz hesap açıp alabilirsiniz.</p>
+                    <form action="/admin/update-imgbb" method="POST" style="margin-bottom:0;">
+                        <input type="text" name="imgbbApiKey" placeholder="ImgBB API Key girin (Örn: a3bc24...)" value="${db.adminCredentials.imgbbApiKey || ''}" style="background:white; margin-top:5px;">
+                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:10px;">💾 API Anahtarını Kaydet</button>
+                    </form>
+                </div>
+
+                <div class="card" style="border:2px solid #25d366; background:#f0fdf4; margin-top:15px;">
                     <h3 style="color:#166534; margin-top:0; border-bottom:2px solid #bbf7d0; padding-bottom:10px;">📱 WhatsApp Bildirim Ayarları</h3>
                     <p style="font-size:13px; color:#166534;">Yöneticinin anında haberdar olması için WhatsApp numaranızı bağlayın.<br><b>Nasıl Alınır?</b> CallMeBot sitesindeki numaraya <code>I allow callmebot to send me messages</code> yazıp gönderin ve gelen API Key'i girin.</p>
                     <form action="/admin/update-wa" method="POST" style="margin-bottom:0;">
                         <label style="font-size:13px; font-weight:bold; color:#166534;">WhatsApp Numaranız</label>
-                        <input type="text" name="waPhone" placeholder="Örn: 905551234567" value="${db.adminCredentials.waPhone || ''}" required style="background:white; margin-top:5px;">
+                        <input type="text" name="waPhone" placeholder="Örn: 905551234567" value="${db.adminCredentials.waPhone || ''}" style="background:white; margin-top:5px;">
                         
                         <label style="font-size:13px; font-weight:bold; color:#166534;">CallMeBot API Key</label>
-                        <input type="text" name="waApiKey" placeholder="Bot'tan gelen API şifresi" value="${db.adminCredentials.waApiKey || ''}" required style="background:white; margin-top:5px;">
+                        <input type="text" name="waApiKey" placeholder="Bot'tan gelen API şifresi" value="${db.adminCredentials.waApiKey || ''}" style="background:white; margin-top:5px;">
                         
                         <button type="submit" class="btn-main btn-success" style="width:100%; margin-top:10px;">💾 Bildirim Ayarlarını Kaydet</button>
                     </form>
                 </div>
 
-                <div class="card" style="border:2px solid #fecaca; background:#fef2f2;">
+                <div class="card" style="border:2px solid #fecaca; background:#fef2f2; margin-top:15px;">
                     <h3 style="color:#ef4444; border-bottom:2px solid #fecaca; padding-bottom:15px; margin-top:0;">🔑 Güvenlik: Giriş Bilgilerini Değiştir</h3>
                     <form action="/admin/update-credentials" method="POST" style="margin-bottom:0; display:flex; gap:10px;">
                         <input type="text" name="newUsername" placeholder="Yeni Kullanıcı Adı" value="${db.adminCredentials.username}" required style="margin:0; flex:1; background:white;">
@@ -811,6 +818,14 @@ app.get('/admin', async (req, res) => {
 // ==========================================
 // MÜDÜR POST/GET İŞLEM ROTALARI
 // ==========================================
+app.post('/admin/update-imgbb', async (req, res) => {
+    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
+    const db = await getDB();
+    db.adminCredentials.imgbbApiKey = req.body.imgbbApiKey;
+    db.markModified('adminCredentials');
+    await db.save();
+    res.redirect('/admin');
+});
 
 app.post('/admin/update-wa', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
@@ -1007,8 +1022,9 @@ app.post('/admin/add-student', async (req, res) => {
     if (req.body.prorate === 'true' && req.body.startDate) {
         let start = new Date(req.body.startDate);
         let year = start.getFullYear();
-        let month = start.getMonth() + 1;
+        let month = start.getMonth() + 1; // getMonth 0-11 arasıdır
         let day = start.getDate();
+        
         let daysInMonth = new Date(year, month, 0).getDate();
         let remainingDays = daysInMonth - day + 1;
         
@@ -1064,9 +1080,11 @@ app.get('/admin/approve-event/:id', async (req, res) => {
 app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    
+    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgPath = '';
     if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer);
+        imgPath = await uploadToImgBB(req.file.buffer, apiKey);
     }
     db.events.push({ 
         id: Date.now().toString(), 
@@ -1129,6 +1147,8 @@ app.get('/manage/edit-event/:id', async (req, res) => {
 app.post('/manage/update-event/:id', upload.single('image'), async (req, res) => {
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    
+    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     const ev = db.events.find(e => e.id == req.params.id);
     if(ev) {
         ev.title = req.body.title; 
@@ -1138,7 +1158,7 @@ app.post('/manage/update-event/:id', upload.single('image'), async (req, res) =>
         ev.quota = parseInt(req.body.quota); 
         ev.price = req.body.price;
         if(req.file) {
-            ev.imgUrl = await uploadToImgBB(req.file.buffer);
+            ev.imgUrl = await uploadToImgBB(req.file.buffer, apiKey);
         }
         db.markModified('events');
         await db.save();
@@ -1221,13 +1241,20 @@ app.post('/manage/update-branch/:id', async (req, res) => {
 app.post('/manage/add-gallery', upload.array('images', 10), async (req, res) => { 
     const db = await getDB(); 
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    
+    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgUrls = [];
     if (req.files && req.files.length > 0) {
         for (let file of req.files) {
-            let url = await uploadToImgBB(file.buffer);
+            let url = await uploadToImgBB(file.buffer, apiKey);
             if (url) imgUrls.push(url);
         }
     }
+    
+    if (imgUrls.length === 0 && (!req.body.videoUrl)) {
+        return res.send(`<script>alert("Hata: Yükleme başarısız! Lütfen geçerli bir API Key girin veya boyutları kontrol edin."); window.location.href="javascript:history.back()";</script>`);
+    }
+
     db.siteContent.gallery.push({ id: Date.now().toString(), title: req.body.title, imgUrls: imgUrls, videoUrl: req.body.videoUrl || '' }); 
     db.markModified('siteContent');
     await db.save(); 
@@ -1268,14 +1295,17 @@ app.get('/manage/edit-gallery/:id', async (req, res) => {
 app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, res) => {
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
+    
+    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     const g = db.siteContent.gallery.find(x => x.id == req.params.id);
+    
     if(g) { 
         g.title = req.body.title; 
         g.videoUrl = req.body.videoUrl || '';
         if (req.files && req.files.length > 0) {
             if(!g.imgUrls) g.imgUrls = [];
             for (let file of req.files) {
-                let url = await uploadToImgBB(file.buffer);
+                let url = await uploadToImgBB(file.buffer, apiKey);
                 if (url) g.imgUrls.push(url);
             }
         }
@@ -1381,11 +1411,9 @@ app.get('/ogretmen-panel', async (req, res) => {
     }).join('') || '<div class="card" style="text-align:center; color:#ef4444; font-weight:bold;">Sınıfınızda öğrenci yok.</div>';
 
     let teacherClassUploadHTML = teacher.classes.map(clsName => {
-        let photos = (db.classGalleries || []).filter(item => item && item.className === clsName);
+        let photos = (db.classAlbums || []).filter(item => item && item.className === clsName);
         let photoGrid = photos.map(p => {
             let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin:2px;">`).join('');
-            if(p.imgUrl && (!p.imgUrls || p.imgUrls.length === 0)) imgs = `<img src="${p.imgUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">`;
-            
             if(!imgs && !p.videoUrl) return '';
 
             return `
@@ -1432,13 +1460,13 @@ app.get('/ogretmen-panel', async (req, res) => {
                         <input type="text" name="title" placeholder="Etkinlik Adı" required>
                         <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Tarih</label><input type="date" name="date" required></div>
-                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Başlama</label><input type="time" name="time" required></div>
-                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Bitiş</label><input type="time" name="endTime" required></div>
+                            <div><label>Tarih</label><input type="date" name="date" required></div>
+                            <div><label>Başlama</label><input type="time" name="time" required></div>
+                            <div><label>Bitiş</label><input type="time" name="endTime" required></div>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Kontenjan</label><input type="number" name="quota" required></div>
-                            <div><label style="font-size:12px; font-weight:bold; color:#475569;">Ücret (TL)</label><input type="number" name="price" required></div>
+                            <div><label>Kontenjan</label><input type="number" name="quota" required></div>
+                            <div><label>Ücret (TL)</label><input type="number" name="price" required></div>
                         </div>
                         <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px;">${teacher.directEvent ? 'Etkinliği Doğrudan Yayınla' : 'Talebi İlet'}</button>
                     </form>
@@ -1483,28 +1511,31 @@ app.post('/teacher/upload-gallery/:className', upload.array('images', 10), async
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
     if (!teacher || !teacher.classes.includes(req.params.className)) return res.redirect('/ogretmen-panel');
 
+    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgUrls = []; 
     if (req.files && req.files.length > 0) { 
         for (let file of req.files) { 
-            let url = await uploadToImgBB(file.buffer); 
+            let url = await uploadToImgBB(file.buffer, apiKey); 
             if (url) imgUrls.push(url); 
         } 
     }
     
-    if (!Array.isArray(db.classGalleries)) db.classGalleries = [];
-    
-    if (imgUrls.length > 0 || req.body.videoUrl) {
-        db.classGalleries.push({
-            id: Date.now().toString(),
-            className: req.params.className,
-            imgUrls: imgUrls,
-            videoUrl: req.body.videoUrl || '',
-            date: new Date().toLocaleDateString('tr-TR')
-        });
-        db.markModified('classGalleries'); 
-        await db.save();
+    if (imgUrls.length === 0 && !req.body.videoUrl) {
+        return res.send(`<script>alert("HATA: Fotoğraflar yüklenemedi. Lütfen API anahtarınızı (Ayarlar) kontrol edin veya en az bir video linki ekleyin."); window.location.href="/ogretmen-panel";</script>`);
     }
+
+    if (!Array.isArray(db.classAlbums)) db.classAlbums = [];
     
+    db.classAlbums.push({
+        id: Date.now().toString(),
+        className: req.params.className,
+        imgUrls: imgUrls,
+        videoUrl: req.body.videoUrl || '',
+        date: new Date().toLocaleDateString('tr-TR')
+    });
+    
+    db.markModified('classAlbums'); 
+    await db.save();
     res.redirect('/ogretmen-panel');
 });
 
@@ -1513,9 +1544,9 @@ app.get('/teacher/delete-gallery/:id', async (req, res) => {
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
     if (!teacher) return res.redirect('/ogretmen-panel');
 
-    if (Array.isArray(db.classGalleries)) { 
-        db.classGalleries = db.classGalleries.filter(x => x.id !== req.params.id);
-        db.markModified('classGalleries'); 
+    if (Array.isArray(db.classAlbums)) { 
+        db.classAlbums = db.classAlbums.filter(x => x.id !== req.params.id);
+        db.markModified('classAlbums'); 
         await db.save(); 
     } 
     res.redirect('/ogretmen-panel');
@@ -1525,10 +1556,11 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user); 
     const status = (teacher && teacher.directEvent) ? 'approved' : 'pending'; 
+    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgPath = ''; 
     
     if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer);
+        imgPath = await uploadToImgBB(req.file.buffer, apiKey);
     }
     
     db.events.push({ 
@@ -1636,9 +1668,9 @@ app.get('/veli-panel', async (req, res) => {
     
     let kalanTutar = (student.tuitionFee || 0) - (student.paidAmount || 0);
 
-    const photos = (db.classGalleries || []).filter(item => item && item.className === student.class);
+    const photos = (db.classAlbums || []).filter(item => item && item.className === student.class);
     const galleryHTML = photos.map(p => {
-        let rawImgs = (p.imgUrls && p.imgUrls.length > 0) ? p.imgUrls : (p.imgUrl ? [p.imgUrl] : []);
+        let rawImgs = (p.imgUrls && p.imgUrls.length > 0) ? p.imgUrls : [];
         let imgsHTML = rawImgs.map(u => `
             <div class="img-container">
                 <img src="${u}">
