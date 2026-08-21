@@ -55,7 +55,7 @@ const DataSchema = new mongoose.Schema({
     teachers: { type: Array, default: [] },
     events: { type: Array, default: [] },
     classAlbums: { type: Array, default: [] },
-    homeworks: { type: Array, default: [] } // Toplu ödev sistemi için eklendi
+    homeworks: { type: Array, default: [] }
 });
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
@@ -151,7 +151,7 @@ const portalTheme = `
     .btn-main { background: var(--coral); color: white; border: none; padding: 12px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; display:inline-block; text-decoration:none; text-align:center; transition: 0.2s; }
     .btn-main:hover { opacity: 0.9; }
     .btn-success { background: #10b981; } .btn-blue { background: var(--blue); } .btn-danger { background: #ef4444; } .btn-wa { background: #25d366; color: white; }
-    input, select, textarea { width: 100%; padding: 12px; margin: 8px 0 18px 0; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; box-sizing: border-box; font-family: inherit;}
+    input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 10px 0; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; box-sizing: border-box; font-family: inherit;}
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size:14px; }
     th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
     th { background: #f1f5f9; color: #475569; font-weight: 700; border-radius: 10px 10px 0 0; }
@@ -1299,7 +1299,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ (TOPLU ÖDEV SİSTEMİ EKLENDİ)
+// 7. ÖĞRETMEN PANELİ (TOPLU SINIF KARNESİ VE ÖDEV SİSTEMİ)
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1341,71 +1341,82 @@ app.get('/ogretmen-panel', async (req, res) => {
     
     if (!teacher) return res.redirect('/login/ogretmen');
 
-    let myStudents = db.students.filter(s => teacher.classes.includes(s.class));
-    let studentOperationsHTML = myStudents.map(s => {
-        let attStatus = (s.attendance && s.attendance[today]) ? s.attendance[today] : 'Belirtilmedi';
-        let reportSent = (s.reports && s.reports[today]) ? true : false;
-        let raporFormHTML = teacher.rapor ? `
-            <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #cbd5e1;">
-                ${reportSent ? `<div style="color:#10b981; font-weight:bold; font-size:13px; text-align:center; padding:10px; background:#f0fdf4; border-radius:8px;">✅ Bugünkü Karne Veliye İletildi</div>` : `
-                <form action="/teacher/send-report/${s.id}" method="POST" style="margin:0;">
-                    <input type="hidden" name="date" value="${today}">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <div>
-                            <label style="font-size:11px; font-weight:bold; color:#64748b;">Uyku Durumu</label>
-                            <select name="uyku" required style="margin:0; padding:10px;">
-                                <option value="Uyumadı">Uyumadı</option>
-                                <option value="1 Saat Uyudu">1 Saat Uyudu</option>
-                                <option value="2+ Saat Uyudu">2+ Saat Uyudu</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:11px; font-weight:bold; color:#64748b;">Yemek Durumu</label>
-                            <select name="yemek" required style="margin:0; padding:10px;">
-                                <option value="Hepsini Yedi">Hepsini Yedi</option>
-                                <option value="Yarısını Yedi">Yarısını Yedi</option>
-                                <option value="Yemedi">Yemedi</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="margin-bottom:10px;">
-                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Ruh Hali</label>
-                        <select name="ruhHali" required style="margin:0; padding:10px;">
-                            <option value="Neşeli 😊">Neşeli 😊</option>
-                            <option value="Sakin 😌">Sakin 😌</option>
-                            <option value="Hareketli ⚡">Hareketli ⚡</option>
+    // Her sınıf için ayrı sekmeler veya kartlar oluşturup toplu karne formu hazırlıyoruz
+    let classTabsHTML = '';
+    let classContentsHTML = '';
+    let classGalleryHTML = '';
+    let classHomeworkHTML = '';
+
+    teacher.classes.forEach((clsName, index) => {
+        let activeClass = index === 0 ? 'active' : '';
+        let classStudents = db.students.filter(s => s.class === clsName);
+
+        classTabsHTML += `<button class="tab-btn ${activeClass}" onclick="showTab('cls-${clsName}', event)">🏫 ${clsName}</button>`;
+
+        // TOPLU KARNE FORMU (TÜM SINIF BİR ARADA)
+        let studentsFormRows = classStudents.map(s => {
+            let attStatus = (s.attendance && s.attendance[today]) ? s.attendance[today] : 'Geldi';
+            let existingReport = (s.reports && s.reports[today]) ? s.reports[today] : {};
+
+            return `
+            <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:15px;">
+                <input type="hidden" name="studentIds" value="${s.id}">
+                <h4 style="margin:0 0 10px 0; color:var(--blue);">${s.name}</h4>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:10px;">
+                    <div>
+                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Yoklama</label>
+                        <select name="att_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                            <option value="Geldi" ${attStatus==='Geldi'?'selected':''}>✔️ Geldi</option>
+                            <option value="Gelmedi" ${attStatus==='Gelmedi'?'selected':''}>✖️ Gelmedi</option>
                         </select>
                     </div>
-                    <textarea name="mesaj" placeholder="Özel veli notu..." rows="2" style="margin-bottom:10px; width:100%;"></textarea>
-                    <button type="submit" class="btn-main btn-blue" style="width:100%; padding:12px;">📲 Veliye Karne Gönder</button>
-                </form>`}
-            </div>` : '';
-
-        return `
-        <div style="background:white; border:1px solid #e2e8f0; border-radius:15px; padding:20px; margin-bottom:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <b style="font-size:18px; color:var(--blue);">${s.name}</b><br>
-                    <small style="color:#64748b; font-weight:bold;">${s.class}</small><br>
-                    <small style="color:${attStatus==='Geldi'?'#10b981':(attStatus==='Gelmedi'?'#ef4444':'#94a3b8')}; font-weight:bold; font-size:13px; display:inline-block; margin-top:5px;">Yoklama: ${attStatus}</small>
+                    <div>
+                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Uyku</label>
+                        <select name="uyku_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                            <option value="Uyumadı" ${existingReport.uyku==='Uyumadı'?'selected':''}>Uyumadı</option>
+                            <option value="1 Saat Uyudu" ${existingReport.uyku==='1 Saat Uyudu'?'selected':''}>1 Saat Uyudu</option>
+                            <option value="2+ Saat Uyudu" ${existingReport.uyku==='2+ Saat Uyudu'?'selected':''}>2+ Saat Uyudu</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Yemek</label>
+                        <select name="yemek_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                            <option value="Hepsini Yedi" ${existingReport.yemek==='Hepsini Yedi'?'selected':''}>Hepsini Yedi</option>
+                            <option value="Yarısını Yedi" ${existingReport.yemek==='Yarısını Yedi'?'selected':''}>Yarısını Yedi</option>
+                            <option value="Yemedi" ${existingReport.yemek==='Yemedi'?'selected':''}>Yemedi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:11px; font-weight:bold; color:#64748b;">Ruh Hali</label>
+                        <select name="ruh_${s.id}" style="margin:0; padding:8px; font-size:13px;">
+                            <option value="Neşeli 😊" ${existingReport.ruhHali==='Neşeli 😊'?'selected':''}>Neşeli 😊</option>
+                            <option value="Sakin 😌" ${existingReport.ruhHali==='Sakin 😌'?'selected':''}>Sakin 😌</option>
+                            <option value="Hareketli ⚡" ${existingReport.ruhHali==='Hareketli ⚡'?'selected':''}>Hareketli ⚡</option>
+                        </select>
+                    </div>
                 </div>
-                ${teacher.yoklama ? `
-                <form action="/teacher/attendance/${s.id}" method="POST" style="margin:0; display:flex; flex-direction:column; gap:5px;">
-                    <input type="hidden" name="date" value="${today}">
-                    <button name="status" value="Geldi" class="btn-main btn-success" style="padding:8px 15px; font-size:12px;">✔️ Geldi</button>
-                    <button name="status" value="Gelmedi" class="btn-main btn-danger" style="padding:8px 15px; font-size:12px;">✖️ Gelmedi</button>
-                </form>` : ''}
-            </div>
-            ${raporFormHTML}
-        </div>`;
-    }).join('') || '<div class="card" style="text-align:center; color:#ef4444; font-weight:bold;">Sınıfınızda öğrenci yok.</div>';
+                <input type="text" name="msg_${s.id}" placeholder="Özel Veli Notu (İsteğe bağlı)" value="${existingReport.mesaj || ''}" style="margin:0; font-size:13px; padding:8px;">
+            </div>`;
+        }).join('') || '<p style="color:gray; text-align:center;">Bu sınıfta kayıtlı öğrenci yok.</p>';
 
-    let teacherClassUploadHTML = teacher.classes.map(clsName => {
+        classContentsHTML += `
+        <div id="cls-${clsName}" class="tab-content ${activeClass}">
+            <div class="card">
+                <h3 style="color:var(--blue); margin-top:0;">📋 ${clsName} - Toplu Yoklama & Günlük Karne</h3>
+                <form action="/teacher/save-batch-report" method="POST">
+                    <input type="hidden" name="date" value="${today}">
+                    <input type="hidden" name="className" value="${clsName}">
+                    ${studentsFormRows}
+                    ${classStudents.length > 0 ? `<button type="submit" class="btn-main btn-success" style="width:100%; padding:15px; font-size:16px; margin-top:10px;">💾 Tüm Sınıfın Bilgilerini Kaydet & Gönder</button>` : ''}
+                </form>
+            </div>
+        </div>`;
+
+        // SINIF ALBÜMÜ YÜKLEME KISMI
         let photos = (db.classAlbums || []).filter(item => item && item.className === clsName);
         let photoGrid = photos.map(p => {
             let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin:2px;">`).join('');
             if(!imgs && !p.videoUrl) return '';
-
             return `
             <div style="position:relative; display:inline-block; margin:5px; padding:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
                 <div style="display:flex; flex-wrap:wrap; max-width:140px;">${imgs}</div>
@@ -1414,25 +1425,23 @@ app.get('/ogretmen-panel', async (req, res) => {
             </div>`;
         }).join('') || '<p style="font-size:12px; color:gray;">Henüz paylaşım yapılmadı.</p>';
 
-        return `
-        <div class="card" style="border-top:4px solid var(--blue); margin-top:15px;">
-            <h4 style="margin:0 0 15px 0; color:var(--blue);">📸 ${clsName} - Albüme Gönderi Ekle</h4>
-            <form action="/teacher/upload-gallery" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px; background:#f1f5f9; padding:15px; border-radius:10px;">
-                <input type="hidden" name="className" value="${clsName}">
-                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px;">Fotoğraflar (Birden fazla seçilebilir)</label>
-                <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0; padding:8px;">
-                
-                <label style="font-size:12px; font-weight:bold; color:#475569; margin-bottom:-5px; margin-top:5px;">Video Linki (YouTube / Instagram - İsteğe Bağlı)</label>
-                <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/..." style="margin:0;">
-                
-                <button type="submit" class="btn-main btn-success" style="padding:10px 15px; font-size:14px; margin-top:5px;">Sınıf Albümünde Paylaş</button>
-            </form>
-            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:15px;">${photoGrid}</div>
+        classGalleryHTML += `
+        <div id="gal-${clsName}" class="tab-content ${activeClass}">
+            <div class="card" style="border-top:4px solid var(--blue);">
+                <h4 style="margin:0 0 15px 0; color:var(--blue);">📸 ${clsName} - Albüme Gönderi Ekle</h4>
+                <form action="/teacher/upload-gallery" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px; background:#f1f5f9; padding:15px; border-radius:10px;">
+                    <input type="hidden" name="className" value="${clsName}">
+                    <label style="font-size:12px; font-weight:bold; color:#475569;">Fotoğraflar (Birden fazla seçilebilir)</label>
+                    <input type="file" name="images" accept="image/*" multiple style="background:white; margin:0; padding:8px;">
+                    <label style="font-size:12px; font-weight:bold; color:#475569;">Video Linki (YouTube / Instagram - İsteğe Bağlı)</label>
+                    <input type="text" name="videoUrl" placeholder="Örn: https://www.youtube.com/..." style="margin:0;">
+                    <button type="submit" class="btn-main btn-success" style="padding:10px 15px; font-size:14px; margin-top:5px;">Sınıf Albümünde Paylaş</button>
+                </form>
+                <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:15px;">${photoGrid}</div>
+            </div>
         </div>`;
-    }).join('');
 
-    // Sınıflar için toplu ödev verme formu ve listesi
-    let homeworkSections = teacher.classes.map(clsName => {
+        // TOPLU ÖDEV KISMI
         let classHomeworks = (db.homeworks || []).filter(h => h.className === clsName);
         let hwListHTML = classHomeworks.map(h => `
             <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -1444,18 +1453,20 @@ app.get('/ogretmen-panel', async (req, res) => {
             </div>
         `).join('') || '<p style="font-size:12px; color:gray;">Bu sınıfa henüz ödev verilmedi.</p>';
 
-        return `
-        <div class="card" style="border-top:4px solid #10b981; margin-top:15px;">
-            <h4 style="margin:0 0 15px 0; color:#10b981;">📚 ${clsName} - Toplu Ödev & Duyuru Ver</h4>
-            <form action="/teacher/add-homework" method="POST" style="margin-bottom:15px; background:#f1f5f9; padding:15px; border-radius:10px;">
-                <input type="hidden" name="className" value="${clsName}">
-                <input type="text" name="title" placeholder="Ödev Başlığı (Örn: Çizgi Çalışması)" required style="margin-top:0;">
-                <textarea name="content" placeholder="Ödev veya bilgilendirme detaylarını buraya yazın..." rows="3" required style="margin-bottom:10px; width:100%;"></textarea>
-                <button type="submit" class="btn-main btn-success" style="width:100%;">Tüm Sınıfa Ödev Gönder</button>
-            </form>
-            <div>${hwListHTML}</div>
+        classHomeworkHTML += `
+        <div id="hw-${clsName}" class="tab-content ${activeClass}">
+            <div class="card" style="border-top:4px solid #10b981;">
+                <h4 style="margin:0 0 15px 0; color:#10b981;">📚 ${clsName} - Toplu Ödev & Duyuru Ver</h4>
+                <form action="/teacher/add-homework" method="POST" style="margin-bottom:15px; background:#f1f5f9; padding:15px; border-radius:10px;">
+                    <input type="hidden" name="className" value="${clsName}">
+                    <input type="text" name="title" placeholder="Ödev Başlığı (Örn: Çizgi Çalışması)" required style="margin-top:0;">
+                    <textarea name="content" placeholder="Ödev veya bilgilendirme detaylarını buraya yazın..." rows="3" required style="margin-bottom:10px; width:100%;"></textarea>
+                    <button type="submit" class="btn-main btn-success" style="width:100%;">Tüm Sınıfa Ödev Gönder</button>
+                </form>
+                <div>${hwListHTML}</div>
+            </div>
         </div>`;
-    }).join('');
+    });
 
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -1463,66 +1474,76 @@ app.get('/ogretmen-panel', async (req, res) => {
             <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">Çıkış Yap</a>
         </div>
         <div style="max-width:900px; margin:20px auto; padding:0 20px;">
-            <div style="display:flex; flex-wrap:wrap; margin-bottom:25px;">
-                <button class="tab-btn active-btn" onclick="showTab('t-sinifim', event)">📋 Sınıfım & Yoklama</button>
-                <button class="tab-btn" onclick="showTab('t-galeri', event)">📸 Sınıf Albümü</button>
-                <button class="tab-btn" onclick="showTab('t-odev', event)">📚 Toplu Ödev</button>
-                <button class="tab-btn" onclick="showTab('t-etkinlik', event)">🎈 Etkinlikler</button>
+            
+            <h3 style="color:var(--blue); margin-bottom:10px;">🏫 Sınıfım & Yoklama</h3>
+            <div style="display:flex; flex-wrap:wrap; margin-bottom:15px;">${classTabsHTML}</div>
+            <div>${classContentsHTML}</div>
+
+            <h3 style="color:var(--blue); margin:30px 0 10px 0;">📸 Sınıf Albümü</h3>
+            <div>${classGalleryHTML}</div>
+
+            <h3 style="color:var(--blue); margin:30px 0 10px 0;">📚 Toplu Ödevler</h3>
+            <div>${classHomeworkHTML}</div>
+
+            <div class="card" style="margin-top:30px;">
+                <h3 style="color:#ea580c; margin-top:0;">🎈 Yeni Etkinlik Talebi</h3>
+                <form action="/teacher/request-event" method="POST" enctype="multipart/form-data" style="margin:0;">
+                    <input type="text" name="title" placeholder="Etkinlik Adı" required>
+                    <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                        <div><label>Tarih</label><input type="date" name="date" required></div>
+                        <div><label>Başlama</label><input type="time" name="time" required></div>
+                        <div><label>Bitiş</label><input type="time" name="endTime" required></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                        <div><label>Kontenjan</label><input type="number" name="quota" required></div>
+                        <div><label>Ücret (TL)</label><input type="number" name="price" required></div>
+                    </div>
+                    <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px;">${teacher.directEvent ? 'Etkinliği Doğrudan Yayınla' : 'Talebi İlet'}</button>
+                </form>
             </div>
-            <div id="t-sinifim" class="tab-content active">${studentOperationsHTML}</div>
-            <div id="t-galeri" class="tab-content">${teacherClassUploadHTML}</div>
-            <div id="t-odev" class="tab-content">${homeworkSections}</div>
-            <div id="t-etkinlik" class="tab-content">
-                <div class="card">
-                    <h3 style="color:#ea580c; margin-top:0;">🎈 Yeni Etkinlik Talebi</h3>
-                    <form action="/teacher/request-event" method="POST" enctype="multipart/form-data" style="margin:0;">
-                        <input type="text" name="title" placeholder="Etkinlik Adı" required>
-                        <input type="file" name="image" accept="image/*" required style="background:white; margin:0 0 10px 0;">
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                            <div><label>Tarih</label><input type="date" name="date" required></div>
-                            <div><label>Başlama</label><input type="time" name="time" required></div>
-                            <div><label>Bitiş</label><input type="time" name="endTime" required></div>
-                        </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                            <div><label>Kontenjan</label><input type="number" name="quota" required></div>
-                            <div><label>Ücret (TL)</label><input type="number" name="price" required></div>
-                        </div>
-                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:20px;">${teacher.directEvent ? 'Etkinliği Doğrudan Yayınla' : 'Talebi İlet'}</button>
-                    </form>
-                </div>
-            </div>
+
         </div>
     </body></html>`);
 });
 
-app.post('/teacher/attendance/:id', async (req, res) => { 
-    const db = await getDB(); 
-    const st = db.students.find(s => s.id == req.params.id); 
-    if(st) { 
-        if(!st.attendance) st.attendance = {}; 
-        st.attendance[req.body.date] = req.body.status; 
-    } 
-    db.markModified('students'); 
-    await db.save(); 
-    res.redirect('/ogretmen-panel'); 
-});
+// TOPLU SINIF KARNESİ VE YOKLAMA KAYDETME ROTASI
+app.post('/teacher/save-batch-report', async (req, res) => {
+    const db = await getDB();
+    const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
+    if (!teacher) return res.redirect('/login/ogretmen');
 
-app.post('/teacher/send-report/:id', async (req, res) => { 
-    const db = await getDB(); 
-    const st = db.students.find(s => s.id == req.params.id); 
-    if(st) { 
-        if(!st.reports) st.reports = {}; 
-        st.reports[req.body.date] = { 
-            uyku: req.body.uyku, 
-            yemek: req.body.yemek, 
-            ruhHali: req.body.ruhHali, 
-            mesaj: req.body.mesaj, 
-            timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) 
-        }; 
-    } 
-    db.markModified('students'); 
-    await db.save(); 
-    res.redirect('/ogretmen-panel'); 
+    let studentIds = req.body.studentIds;
+    if (!studentIds) return res.redirect('/ogretmen-panel');
+    if (!Array.isArray(studentIds)) studentIds = [studentIds];
+
+    let date = req.body.date;
+
+    studentIds.forEach(id => {
+        let student = db.students.find(s => s.id === id);
+        if (student) {
+            // Yoklama Kaydı
+            let attVal = req.body[`att_${id}`] || 'Geldi';
+            if (!student.attendance) student.attendance = {};
+            student.attendance[date] = attVal;
+
+            // Günlük Karne Kaydı
+            if (teacher.rapor) {
+                if (!student.reports) student.reports = {};
+                student.reports[date] = {
+                    uyku: req.body[`uyku_${id}`] || 'Uyumadı',
+                    yemek: req.body[`yemek_${id}`] || 'Hepsini Yedi',
+                    ruhHali: req.body[`ruh_${id}`] || 'Neşeli 😊',
+                    mesaj: req.body[`msg_${id}`] || '',
+                    timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                };
+            }
+        }
+    });
+
+    db.markModified('students');
+    await db.save();
+    res.send(`<script>alert("Tüm sınıfın yoklama ve karneleri başarıyla kaydedildi!"); window.location.href="/ogretmen-panel";</script>`);
 });
 
 app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res) => {
@@ -1572,7 +1593,6 @@ app.get('/teacher/delete-gallery/:id', async (req, res) => {
     res.redirect('/ogretmen-panel');
 });
 
-// Toplu ödev verme rotası
 app.post('/teacher/add-homework', async (req, res) => {
     const db = await getDB();
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
@@ -1641,7 +1661,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
 });
 
 // ============================================================================
-// 8. VELİ PORTALI (ETKİNLİK DURUMU VE ÖDEVLER EKLENDİ)
+// 8. VELİ PORTALI
 // ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1727,7 +1747,6 @@ app.get('/veli-panel', async (req, res) => {
     
     let kalanTutar = (student.tuitionFee || 0) - (student.paidAmount || 0);
 
-    // Velinin çocuğunun sınıfına verilen ödevler
     const classHomeworks = (db.homeworks || []).filter(h => h.className === student.class);
     const homeworkHTML = classHomeworks.map(h => `
         <div style="background:#f0fdf4; padding:15px; border-radius:12px; border:1px solid #bbf7d0; margin-bottom:10px;">
@@ -1736,7 +1755,6 @@ app.get('/veli-panel', async (req, res) => {
         </div>
     `).join('') || '<p style="text-align:center; color:gray;">Sınıfınız için henüz ödev veya duyuru verilmedi.</p>';
 
-    // Velinin katıldığı / kayıt olduğu etkinlikler
     const myEvents = db.events.filter(ev => (ev.reservations || []).some(r => r.phone === student.parentPhone || r.name.toLowerCase() === student.name.toLowerCase()));
     const myEventsHTML = myEvents.map(ev => `
         <div style="background:#eff6ff; padding:15px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
