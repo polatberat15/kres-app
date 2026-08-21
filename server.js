@@ -54,7 +54,8 @@ const DataSchema = new mongoose.Schema({
     students: { type: Array, default: [] },
     teachers: { type: Array, default: [] },
     events: { type: Array, default: [] },
-    classAlbums: { type: Array, default: [] }
+    classAlbums: { type: Array, default: [] },
+    homeworks: { type: Array, default: [] } // Toplu ödev sistemi için eklendi
 });
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
@@ -67,6 +68,7 @@ async function getDB() {
     if (!doc.siteContent.branches) doc.siteContent.branches = [];
     if (!doc.siteContent.gallery) doc.siteContent.gallery = [];
     if (!Array.isArray(doc.classAlbums)) doc.classAlbums = [];
+    if (!Array.isArray(doc.homeworks)) doc.homeworks = [];
     if (!doc.adminCredentials) {
         doc.adminCredentials = { username: "admin", password: "123", waPhone: "", waApiKey: "" };
     }
@@ -199,7 +201,7 @@ const pwaInstallInfo = `
 `;
 
 // ============================================================================
-// 1. ANA VİTRİN SAYFASI (PWA BİLGİLENDİRMESİ EN ÜSTTE)
+// 1. ANA VİTRİN SAYFASI
 // ============================================================================
 app.get('/', async (req, res) => {
     const db = await getDB();
@@ -275,7 +277,6 @@ app.get('/', async (req, res) => {
         <a href="/portal-giris" class="btn-main" style="background:#e11d48; display:flex; align-items:center; gap:5px;">🔒 Kullanıcı Girişi</a>
     </div>
 
-    <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
     <div style="max-width:1100px; margin:20px auto 0 auto; padding:0 20px;">
         ${pwaInstallInfo}
     </div>
@@ -387,7 +388,7 @@ app.post('/atolye-talep/:id', async (req, res) => {
 });
 
 // ============================================================================
-// 3. GİRİŞ KAPISI (PWA BİLGİLENDİRMESİ EN ÜSTTE)
+// 3. GİRİŞ KAPISI
 // ============================================================================
 app.get('/portal-giris', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -397,7 +398,6 @@ app.get('/portal-giris', (req, res) => {
             <a href="/" style="color:#bfdbfe; font-size:14px; text-decoration:none; font-weight:bold;">← Vitrine Dön</a>
         </div>
         
-        <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
         <div style="max-width:450px; margin:20px auto 0 auto; padding:0 15px;">
             ${pwaInstallInfo}
         </div>
@@ -434,7 +434,7 @@ app.post('/login/admin', async (req, res) => {
 });
 
 // ============================================================================
-// 4. MÜDÜR PANELİ (TAM VE EKSİKSİZ)
+// 4. MÜDÜR PANELİ
 // ============================================================================
 app.get('/admin', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
@@ -1299,7 +1299,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ VE SINIF İŞLEMLERİ (PWA BİLGİLENDİRMESİ EN ÜSTTE)
+// 7. ÖĞRETMEN PANELİ (TOPLU ÖDEV SİSTEMİ EKLENDİ)
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1308,7 +1308,6 @@ app.get('/login/ogretmen', (req, res) => {
             <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a>
         </div>
         
-        <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
         <div style="max-width:400px; margin:20px auto 0 auto; padding:0 15px;">
             ${pwaInstallInfo}
         </div>
@@ -1432,6 +1431,32 @@ app.get('/ogretmen-panel', async (req, res) => {
         </div>`;
     }).join('');
 
+    // Sınıflar için toplu ödev verme formu ve listesi
+    let homeworkSections = teacher.classes.map(clsName => {
+        let classHomeworks = (db.homeworks || []).filter(h => h.className === clsName);
+        let hwListHTML = classHomeworks.map(h => `
+            <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b style="color:var(--blue); font-size:14px;">📚 ${h.title}</b> <span style="font-size:11px; color:gray;">(${h.date})</span><br>
+                    <p style="margin:5px 0 0 0; font-size:13px; color:#475569;">${h.content}</p>
+                </div>
+                <a href="/teacher/delete-homework/${h.id}" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Sil</a>
+            </div>
+        `).join('') || '<p style="font-size:12px; color:gray;">Bu sınıfa henüz ödev verilmedi.</p>';
+
+        return `
+        <div class="card" style="border-top:4px solid #10b981; margin-top:15px;">
+            <h4 style="margin:0 0 15px 0; color:#10b981;">📚 ${clsName} - Toplu Ödev & Duyuru Ver</h4>
+            <form action="/teacher/add-homework" method="POST" style="margin-bottom:15px; background:#f1f5f9; padding:15px; border-radius:10px;">
+                <input type="hidden" name="className" value="${clsName}">
+                <input type="text" name="title" placeholder="Ödev Başlığı (Örn: Çizgi Çalışması)" required style="margin-top:0;">
+                <textarea name="content" placeholder="Ödev veya bilgilendirme detaylarını buraya yazın..." rows="3" required style="margin-bottom:10px; width:100%;"></textarea>
+                <button type="submit" class="btn-main btn-success" style="width:100%;">Tüm Sınıfa Ödev Gönder</button>
+            </form>
+            <div>${hwListHTML}</div>
+        </div>`;
+    }).join('');
+
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
             <h2 style="margin:0;">👩‍🏫 Hoşgeldiniz, ${uName}</h2>
@@ -1441,10 +1466,12 @@ app.get('/ogretmen-panel', async (req, res) => {
             <div style="display:flex; flex-wrap:wrap; margin-bottom:25px;">
                 <button class="tab-btn active-btn" onclick="showTab('t-sinifim', event)">📋 Sınıfım & Yoklama</button>
                 <button class="tab-btn" onclick="showTab('t-galeri', event)">📸 Sınıf Albümü</button>
+                <button class="tab-btn" onclick="showTab('t-odev', event)">📚 Toplu Ödev</button>
                 <button class="tab-btn" onclick="showTab('t-etkinlik', event)">🎈 Etkinlikler</button>
             </div>
             <div id="t-sinifim" class="tab-content active">${studentOperationsHTML}</div>
             <div id="t-galeri" class="tab-content">${teacherClassUploadHTML}</div>
+            <div id="t-odev" class="tab-content">${homeworkSections}</div>
             <div id="t-etkinlik" class="tab-content">
                 <div class="card">
                     <h3 style="color:#ea580c; margin-top:0;">🎈 Yeni Etkinlik Talebi</h3>
@@ -1545,6 +1572,41 @@ app.get('/teacher/delete-gallery/:id', async (req, res) => {
     res.redirect('/ogretmen-panel');
 });
 
+// Toplu ödev verme rotası
+app.post('/teacher/add-homework', async (req, res) => {
+    const db = await getDB();
+    const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
+    const targetClass = req.body.className;
+
+    if (!teacher || !teacher.classes.includes(targetClass)) return res.redirect('/ogretmen-panel');
+
+    if (!Array.isArray(db.homeworks)) db.homeworks = [];
+    db.homeworks.push({
+        id: Date.now().toString(),
+        className: targetClass,
+        title: req.body.title,
+        content: req.body.content,
+        date: new Date().toLocaleDateString('tr-TR')
+    });
+
+    db.markModified('homeworks');
+    await db.save();
+    res.redirect('/ogretmen-panel');
+});
+
+app.get('/teacher/delete-homework/:id', async (req, res) => {
+    const db = await getDB();
+    const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
+    if (!teacher) return res.redirect('/ogretmen-panel');
+
+    if (Array.isArray(db.homeworks)) {
+        db.homeworks = db.homeworks.filter(h => h.id !== req.params.id);
+        db.markModified('homeworks');
+        await db.save();
+    }
+    res.redirect('/ogretmen-panel');
+});
+
 app.post('/teacher/request-event', upload.single('image'), async (req, res) => { 
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user); 
@@ -1579,7 +1641,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
 });
 
 // ============================================================================
-// 8. VELİ PORTALI (PWA BİLGİLENDİRMESİ EN ÜSTTE)
+// 8. VELİ PORTALI (ETKİNLİK DURUMU VE ÖDEVLER EKLENDİ)
 // ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1588,7 +1650,6 @@ app.get('/login/veli', (req, res) => {
             <a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Geri Dön</a>
         </div>
         
-        <!-- EN ÜSTTE PWA BİLGİLENDİRMESİ -->
         <div style="max-width:400px; margin:20px auto 0 auto; padding:0 15px;">
             ${pwaInstallInfo}
         </div>
@@ -1666,6 +1727,27 @@ app.get('/veli-panel', async (req, res) => {
     
     let kalanTutar = (student.tuitionFee || 0) - (student.paidAmount || 0);
 
+    // Velinin çocuğunun sınıfına verilen ödevler
+    const classHomeworks = (db.homeworks || []).filter(h => h.className === student.class);
+    const homeworkHTML = classHomeworks.map(h => `
+        <div style="background:#f0fdf4; padding:15px; border-radius:12px; border:1px solid #bbf7d0; margin-bottom:10px;">
+            <b style="color:#166534; font-size:15px;">📚 ${h.title}</b> <span style="font-size:11px; color:gray;">(${h.date})</span>
+            <p style="margin:8px 0 0 0; font-size:14px; color:#334155;">${h.content}</p>
+        </div>
+    `).join('') || '<p style="text-align:center; color:gray;">Sınıfınız için henüz ödev veya duyuru verilmedi.</p>';
+
+    // Velinin katıldığı / kayıt olduğu etkinlikler
+    const myEvents = db.events.filter(ev => (ev.reservations || []).some(r => r.phone === student.parentPhone || r.name.toLowerCase() === student.name.toLowerCase()));
+    const myEventsHTML = myEvents.map(ev => `
+        <div style="background:#eff6ff; padding:15px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <b style="color:var(--blue); font-size:15px;">🎨 ${ev.title}</b><br>
+                <small style="color:#475569;">📅 Tarih: ${ev.date} | ⏰ Saat: ${ev.time}</small>
+            </div>
+            <span style="background:#10b981; color:white; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold;">✅ Katılıyor</span>
+        </div>
+    `).join('') || '<p style="text-align:center; color:gray;">Kayıtlı olduğunuz aktif bir etkinlik bulunmuyor.</p>';
+
     const photos = (db.classAlbums || []).filter(item => item && item.className === student.class);
     const galleryHTML = photos.map(p => {
         let rawImgs = (p.imgUrls && p.imgUrls.length > 0) ? p.imgUrls : [];
@@ -1697,6 +1779,14 @@ app.get('/veli-panel', async (req, res) => {
             <div class="card">
                 <h3>📑 Günlük Gelişim Karnesi</h3>
                 ${reportHTML}
+            </div>
+            <div class="card">
+                <h3>📚 Öğretmen Ödevleri & Duyurular</h3>
+                ${homeworkHTML}
+            </div>
+            <div class="card">
+                <h3>🎨 Katıldığım Etkinlikler</h3>
+                ${myEventsHTML}
             </div>
             <div class="card">
                 <h3>📸 Sınıf Albümü & Etkinlikler</h3>
