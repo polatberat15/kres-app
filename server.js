@@ -1,39 +1,41 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - %100 ÇALIŞAN FİNAL SÜRÜM ---
+// ============================================================================
+// ALBAYRAK ÇOCUK AKADEMİSİ - %100 EKSİKSİZ VE TAM SÜRÜM SERVER KODU
+// ============================================================================
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const axios = require('axios');
-const FormData = require('form-data');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Yüksek boyutlu fotoğraf yüklemeleri için limitleri genişletiyoruz
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
 
+// Multer hafıza ayarı
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 25 * 1024 * 1024 } // 25 MB dosya boyutu limiti
+    limits: { fileSize: 25 * 1024 * 1024 } // 25 MB'a kadar destek
 });
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/kres";
-const IMGBB_DEFAULT_KEY = "a734bf8c136cc71f12084c4e92b8a4d0";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('☁️ Kalıcı MongoDB Veritabanına Başarıyla Bağlanıldı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
+// Veritabanı Şeması
 const DataSchema = new mongoose.Schema({
     adminCredentials: { 
         username: { type: String, default: "admin" }, 
         password: { type: String, default: "123" },
         waPhone: { type: String, default: "" },
-        waApiKey: { type: String, default: "" },
-        imgbbApiKey: { type: String, default: "a734bf8c136cc71f12084c4e92b8a4d0" }
+        waApiKey: { type: String, default: "" }
     },
     siteContent: {
         badgeText: { type: String, default: "✨ 2026 - 2027 Erken Kayıtlarımız Başlamıştır" },
@@ -60,14 +62,18 @@ const DataSchema = new mongoose.Schema({
 
 const DataModel = mongoose.model('AcademyData', DataSchema);
 
+// Güvenli Veritabanı Getirme ve Eksik Alan Onarma
 async function getDB() {
     let doc = await DataModel.findOne();
     if (!doc) doc = await DataModel.create({});
     
+    if (!doc.siteContent) doc.siteContent = {};
     if (!doc.siteContent.branches) doc.siteContent.branches = [];
-    if (!doc.gallery) doc.gallery = [];
+    if (!doc.siteContent.gallery) doc.siteContent.gallery = [];
     if (!Array.isArray(doc.classAlbums)) doc.classAlbums = [];
-    if (!doc.adminCredentials.imgbbApiKey) doc.adminCredentials.imgbbApiKey = IMGBB_DEFAULT_KEY;
+    if (!doc.adminCredentials) {
+        doc.adminCredentials = { username: "admin", password: "123", waPhone: "", waApiKey: "" };
+    }
     
     doc.students.forEach(s => {
         if (!s.attendance) s.attendance = {};
@@ -91,6 +97,7 @@ async function getDB() {
     return doc;
 }
 
+// WhatsApp Bildirim Gönderici
 async function sendWaNotification(db, message) {
     const phone = db.adminCredentials.waPhone;
     const apikey = db.adminCredentials.waApiKey;
@@ -104,30 +111,14 @@ async function sendWaNotification(db, message) {
     }
 }
 
-// %100 Uyumlu ImgBB Yükleme Fonksiyonu
-async function uploadToImgBB(fileBuffer, originalName, apiKey) {
-    const key = apiKey || IMGBB_DEFAULT_KEY;
-    try {
-        const form = new FormData();
-        form.append('image', fileBuffer.toString('base64'));
-
-        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${key}`, form, {
-            headers: form.getHeaders(),
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
-            timeout: 60000
-        });
-
-        if (response.data && response.data.data && response.data.data.url) {
-            return response.data.data.url;
-        }
-        return "";
-    } catch (e) {
-        console.error("ImgBB Upload API Hatası:", e.response ? e.response.data : e.message);
-        return "";
-    }
+// Fotoğrafları Data URI (Base64) formatına çevirme (Harici API gerektirmez, %100 garantili)
+function bufferToDataURI(file) {
+    if (!file || !file.buffer) return "";
+    const mimeType = file.mimetype || "image/jpeg";
+    return `data:${mimeType};base64,${file.buffer.toString('base64')}`;
 }
 
+// Yetki Kontrolü
 function canManageVitrin(req, db) {
     if (req.cookies.admin_logged === 'true') return true;
     if (req.cookies.teacher_user) {
@@ -137,6 +128,7 @@ function canManageVitrin(req, db) {
     return false;
 }
 
+// YouTube / Instagram Video Yerleştirme
 function getEmbedHTML(url) {
     if(!url) return '';
     if(url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -152,17 +144,7 @@ function getEmbedHTML(url) {
     return `<a href="${url}" target="_blank" class="btn-main btn-blue" style="margin-top:10px; display:block; text-align:center;">🎥 Videoyu İzle</a>`;
 }
 
-app.get('/download-image', async (req, res) => {
-    try {
-        const response = await axios.get(req.query.url, { responseType: 'arraybuffer' });
-        res.setHeader('Content-Disposition', 'attachment; filename="albayrak-akademi.jpg"');
-        res.setHeader('Content-Type', response.headers['content-type']);
-        res.send(response.data);
-    } catch (e) {
-        res.redirect(req.query.url);
-    }
-});
-
+// Ortak Arayüz Teması ve CSS
 const portalTheme = `
 <style>
     :root { --coral: #ef4444; --amber: #fca311; --cream: #f8fafc; --blue: #1e3a8a; }
@@ -215,9 +197,9 @@ const iconWhatsapp = `<svg width="20" height="20" viewBox="0 0 24 24" fill="curr
 const iconInstagram = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`;
 const iconFacebook = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>`;
 
-// ==========================================
+// ============================================================================
 // 1. ANA VİTRİN SAYFASI
-// ==========================================
+// ============================================================================
 app.get('/', async (req, res) => {
     const db = await getDB();
     const sc = db.siteContent;
@@ -229,7 +211,7 @@ app.get('/', async (req, res) => {
         let imgsHTML = rawImgs.map(u => `
             <div class="img-container">
                 <img src="${u}">
-                <a href="/download-image?url=${encodeURIComponent(u)}" class="download-btn">⬇️ İndir</a>
+                <a href="${u}" download="akademi-galeri.jpg" class="download-btn">⬇️ İndir</a>
             </div>
         `).join('');
         let vid = getEmbedHTML(g.videoUrl);
@@ -280,6 +262,7 @@ app.get('/', async (req, res) => {
         .hero { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 60px 20px; text-align: center; border-radius: 0 0 40px 40px; }
         .hero h1 { font-size: 32px; margin-bottom: 15px; font-weight: 900; }
         .social-bar a { color: white; text-decoration: none; margin: 5px; font-size: 13px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 20px; display:inline-flex; align-items:center; gap:8px; transition:0.3s; }
+        .social-bar a:hover { transform: scale(1.05); }
         .floating-whatsapp { position: fixed !important; bottom: 30px !important; right: 30px !important; background: #25d366 !important; color: white !important; border-radius: 50px !important; padding: 14px 24px !important; display: flex !important; align-items: center !important; gap: 10px !important; font-weight: bold !important; font-size: 15px !important; text-decoration: none !important; z-index: 99999 !important; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4) !important; transition: 0.3s !important; }
     </style></head><body>
     
@@ -332,9 +315,9 @@ app.get('/', async (req, res) => {
     </body></html>`);
 });
 
-// ==========================================
-// ETKİNLİK DETAY
-// ==========================================
+// ============================================================================
+// 2. ETKİNLİK DETAY VE REZERVASYON ROTALARI
+// ============================================================================
 app.get('/atolye-detay/:id', async (req, res) => {
     const db = await getDB();
     const e = db.events.find(ev => ev.id == req.params.id);
@@ -380,7 +363,7 @@ app.post('/atolye-rezervasyon/:id', async (req, res) => {
         await db.save(); 
         res.send(`<script>alert("Rezervasyon başarıyla oluşturuldu!"); window.location.href="/";</script>`); 
     } else {
-        res.send(`<script>alert("Hata: Kontenjan dolu veya atölye bulunamadı!"); window.location.href="/";</script>`); 
+        res.send(`<script>alert("Hata: Kontenjan dolu veya etkinlik bulunamadı!"); window.location.href="/";</script>`); 
     }
 });
 
@@ -397,9 +380,9 @@ app.post('/atolye-talep/:id', async (req, res) => {
     } 
 });
 
-// ==========================================
-// KULLANICI GİRİŞLERİ
-// ==========================================
+// ============================================================================
+// 3. GİRİŞ KAPISI VE YÖNLENDİRMELER
+// ============================================================================
 app.get('/portal-giris', (req, res) => {
     res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -438,9 +421,9 @@ app.post('/login/admin', async (req, res) => {
     }
 });
 
-// ==========================================
-// 4. MÜDÜR PANELİ
-// ==========================================
+// ============================================================================
+// 4. MÜDÜR PANELİ (TAM VE EKSİKSİZ)
+// ============================================================================
 app.get('/admin', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB();
@@ -535,7 +518,7 @@ app.get('/admin', async (req, res) => {
                     <button name="status" value="Gelmedi" class="btn-main btn-danger" style="padding:4px 8px; font-size:11px;">Gelmedi</button>
                 </form>
             </td>
-            <td style="text-align:center;"><a href="/delete-student/${s.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">Sil</a></td>
+            <td style="text-align:center;"><a href="/delete-student/${s.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;" onclick="return confirm('Öğrenci silinecek, emin misiniz?')">Sil</a></td>
         </tr>`;
     }).join('');
 
@@ -550,7 +533,7 @@ app.get('/admin', async (req, res) => {
             </div>
             <div style="display:flex; flex-direction:column; gap:5px;">
                 <a href="/admin/edit-teacher/${t.username}" class="btn-main btn-blue" style="font-size:11px; padding:6px 12px;">Düzenle</a>
-                <a href="/admin/delete-teacher/${t.username}" class="btn-main btn-danger" style="font-size:11px; padding:6px 12px;">Sil</a>
+                <a href="/admin/delete-teacher/${t.username}" class="btn-main btn-danger" style="font-size:11px; padding:6px 12px;" onclick="return confirm('Öğretmen hesabı silinsin mi?')">Sil</a>
             </div>
         </div>`;
     }).join('');
@@ -576,7 +559,7 @@ app.get('/admin', async (req, res) => {
                     <button onclick="copyToClipboard(window.location.origin + '/atolye-detay/${e.id}', this)" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">📋 Linki Kopyala</button>
                     <a href="/atolye-detay/${e.id}" target="_blank" class="btn-main btn-success" style="padding:6px 12px; font-size:11px; margin-right:5px;">🔗 Sayfaya Git</a>
                     <a href="/manage/edit-event/${e.id}" class="btn-main btn-blue" style="padding:6px 12px; font-size:11px; margin-right:5px;">✏️ Düzenle</a>
-                    <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;">🗑️ Sil</a>
+                    <a href="/manage/delete-event/${e.id}" class="btn-main btn-danger" style="padding:6px 12px; font-size:11px;" onclick="return confirm('Etkinliği silmek istiyor musunuz?')">🗑️ Sil</a>
                 </div>
             </div>
             <div style="font-size:13px; color:#475569;">Kayıtlı: <b>${e.reservations.length}/${e.quota}</b></div>
@@ -792,16 +775,7 @@ app.get('/admin', async (req, res) => {
             </div>
 
             <div id="t-ayar" class="tab-content">
-                <div class="card" style="border:2px solid #3b82f6; background:#eff6ff;">
-                    <h3 style="color:#1e3a8a; margin-top:0; border-bottom:2px solid #bfdbfe; padding-bottom:10px;">☁️ Fotoğraf Depolama Ayarları</h3>
-                    <p style="font-size:13px; color:#1e3a8a;">Fotoğraflar ImgBB API ile doğrudan okul hesabınıza yüklenir.</p>
-                    <form action="/admin/update-imgbb" method="POST" style="margin-bottom:0;">
-                        <input type="text" name="imgbbApiKey" placeholder="ImgBB API Key" value="${db.adminCredentials.imgbbApiKey || ''}" style="background:white; margin-top:5px;">
-                        <button type="submit" class="btn-main btn-blue" style="width:100%; margin-top:10px;">💾 API Anahtarını Kaydet</button>
-                    </form>
-                </div>
-
-                <div class="card" style="border:2px solid #25d366; background:#f0fdf4; margin-top:15px;">
+                <div class="card" style="border:2px solid #25d366; background:#f0fdf4;">
                     <h3 style="color:#166534; margin-top:0; border-bottom:2px solid #bbf7d0; padding-bottom:10px;">📱 WhatsApp Bildirim Ayarları</h3>
                     <p style="font-size:13px; color:#166534;">Yöneticinin anında haberdar olması için WhatsApp numaranızı bağlayın.<br><b>Nasıl Alınır?</b> CallMeBot sitesindeki numaraya <code>I allow callmebot to send me messages</code> yazıp gönderin ve gelen API Key'i girin.</p>
                     <form action="/admin/update-wa" method="POST" style="margin-bottom:0;">
@@ -829,18 +803,9 @@ app.get('/admin', async (req, res) => {
     </body></html>`);
 });
 
-// ==========================================
-// MÜDÜR POST/GET İŞLEM ROTALARI
-// ==========================================
-app.post('/admin/update-imgbb', async (req, res) => {
-    if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
-    const db = await getDB();
-    db.adminCredentials.imgbbApiKey = req.body.imgbbApiKey;
-    db.markModified('adminCredentials');
-    await db.save();
-    res.redirect('/admin');
-});
-
+// ============================================================================
+// 5. MÜDÜR İŞLEM ROTALARI
+// ============================================================================
 app.post('/admin/update-wa', async (req, res) => {
     if (req.cookies.admin_logged !== 'true') return res.redirect('/login/admin');
     const db = await getDB();
@@ -1088,17 +1053,16 @@ app.get('/admin/approve-event/:id', async (req, res) => {
     res.redirect('/admin'); 
 });
 
-// ==========================================
-// ORTAK YÖNETİM ROTALARI
-// ==========================================
+// ============================================================================
+// 6. ORTAK VİTRİN VE ETKİNLİK YÖNETİMİ (MÜDÜR + YETKİLİ ÖĞRETMEN)
+// ============================================================================
 app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     
-    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgPath = '';
     if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer, req.file.originalname, apiKey);
+        imgPath = bufferToDataURI(req.file);
     }
     db.events.push({ 
         id: Date.now().toString(), 
@@ -1162,7 +1126,6 @@ app.post('/manage/update-event/:id', upload.single('image'), async (req, res) =>
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     
-    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     const ev = db.events.find(e => e.id == req.params.id);
     if(ev) {
         ev.title = req.body.title; 
@@ -1172,7 +1135,7 @@ app.post('/manage/update-event/:id', upload.single('image'), async (req, res) =>
         ev.quota = parseInt(req.body.quota); 
         ev.price = req.body.price;
         if(req.file) {
-            ev.imgUrl = await uploadToImgBB(req.file.buffer, req.file.originalname, apiKey);
+            ev.imgUrl = bufferToDataURI(req.file);
         }
         db.markModified('events');
         await db.save();
@@ -1256,12 +1219,11 @@ app.post('/manage/add-gallery', upload.array('images', 10), async (req, res) => 
     const db = await getDB(); 
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     
-    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgUrls = [];
     if (req.files && req.files.length > 0) {
         for (let file of req.files) {
-            let url = await uploadToImgBB(file.buffer, file.originalname, apiKey);
-            if (url) imgUrls.push(url);
+            let dataUri = bufferToDataURI(file);
+            if (dataUri) imgUrls.push(dataUri);
         }
     }
 
@@ -1306,7 +1268,6 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
     const db = await getDB();
     if (!canManageVitrin(req, db)) return res.redirect('/portal-giris');
     
-    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     const g = db.siteContent.gallery.find(x => x.id == req.params.id);
     
     if(g) { 
@@ -1315,8 +1276,8 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
         if (req.files && req.files.length > 0) {
             if(!g.imgUrls) g.imgUrls = [];
             for (let file of req.files) {
-                let url = await uploadToImgBB(file.buffer, file.originalname, apiKey);
-                if (url) g.imgUrls.push(url);
+                let dataUri = bufferToDataURI(file);
+                if (dataUri) g.imgUrls.push(dataUri);
             }
         }
         db.markModified('siteContent');
@@ -1325,9 +1286,9 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
     res.redirect(req.cookies.admin_logged === 'true' ? '/admin' : '/ogretmen-panel');
 });
 
-// ==========================================
-// 5. ÖĞRETMEN PANELİ
-// ==========================================
+// ============================================================================
+// 7. ÖĞRETMEN PANELİ VE SINIF İŞLEMLERİ
+// ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card"><h2 style="margin:0;">👩‍🏫 Öğretmen Girişi</h2><a href="/portal-giris" style="color:#bfdbfe; font-size:13px; text-decoration:none; display:inline-block; margin-top:10px;">← Kullanıcı Girişine Dön</a></div>
@@ -1516,7 +1477,7 @@ app.post('/teacher/send-report/:id', async (req, res) => {
     res.redirect('/ogretmen-panel'); 
 });
 
-// Sınıf Albümü Yükleme Rotası
+// Sınıf Albümü Fotoğraf/Video Yükleme
 app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res) => {
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
@@ -1524,17 +1485,16 @@ app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res)
     
     if (!teacher || !teacher.classes.includes(targetClass)) return res.redirect('/ogretmen-panel');
 
-    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgUrls = []; 
     if (req.files && req.files.length > 0) { 
         for (let file of req.files) { 
-            let url = await uploadToImgBB(file.buffer, file.originalname, apiKey); 
-            if (url) imgUrls.push(url); 
+            let dataUri = bufferToDataURI(file); 
+            if (dataUri) imgUrls.push(dataUri); 
         } 
     }
     
     if (imgUrls.length === 0 && !req.body.videoUrl) {
-        return res.send(`<script>alert("HATA: Fotoğraflar sunucuya yüklenemedi. Lütfen internet bağlantınızı veya dosya boyutunu kontrol edin."); window.location.href="/ogretmen-panel";</script>`);
+        return res.send(`<script>alert("HATA: Fotoğraf seçilmedi veya video linki girilmedi."); window.location.href="/ogretmen-panel";</script>`);
     }
 
     if (!Array.isArray(db.classAlbums)) db.classAlbums = [];
@@ -1569,11 +1529,10 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
     const db = await getDB(); 
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user); 
     const status = (teacher && teacher.directEvent) ? 'approved' : 'pending'; 
-    const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgPath = ''; 
     
     if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer, req.file.originalname, apiKey);
+        imgPath = bufferToDataURI(req.file);
     }
     
     db.events.push({ 
@@ -1599,9 +1558,9 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
     res.send(`<script>alert("Talebiniz kaydedildi!"); window.location.href="/ogretmen-panel";</script>`); 
 });
 
-// ==========================================
-// 6. VELİ PORTALI (İNDİRME BUTONLU)
-// ==========================================
+// ============================================================================
+// 8. VELİ PORTALI (GİRİŞ, ŞİFRE DEĞİŞTİRME VE İNDİRME)
+// ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
         <div class="header-card">
@@ -1687,7 +1646,7 @@ app.get('/veli-panel', async (req, res) => {
         let imgsHTML = rawImgs.map(u => `
             <div class="img-container">
                 <img src="${u}">
-                <a href="/download-image?url=${encodeURIComponent(u)}" class="download-btn">⬇️ İndir</a>
+                <a href="${u}" download="sinif-fotografi.jpg" class="download-btn">⬇️ İndir</a>
             </div>
         `).join('');
         let vid = getEmbedHTML(p.videoUrl);
@@ -1732,4 +1691,5 @@ app.get('/veli-panel', async (req, res) => {
     </body></html>`);
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ: http://localhost:${PORT}`));
+// Sunucu Başlatma
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ BAŞARIYLA BAŞLATILDI: http://localhost:${PORT}`));
