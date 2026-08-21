@@ -76,6 +76,7 @@ async function getDB() {
     doc.students.forEach(s => {
         if (!s.attendance) s.attendance = {};
         if (!s.reports) s.reports = {}; 
+        if (!s.eventParticipation) s.eventParticipation = {}; // Etkinlik katılım durumu
         if (typeof s.feePaid === 'undefined') s.feePaid = false;
         if (!s.allergy) s.allergy = "Belirtilmedi";
         if (!s.registrationDate) s.registrationDate = new Date().toISOString().split('T')[0];
@@ -1039,7 +1040,8 @@ app.post('/admin/add-student', async (req, res) => {
         paidAmount: 0,
         feePaid: false, 
         attendance: {}, 
-        reports: {} 
+        reports: {},
+        eventParticipation: {}
     }); 
     db.markModified('students');
     await db.save(); 
@@ -1299,7 +1301,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ (TÜM SINIF TEK EKRAN TOPLU KARNE VE YOKLAMA)
+// 7. ÖĞRETMEN PANELİ (TOPLU SINIF KARNESİ, YOKLAMA VE ETKİNLİK KATILIMI)
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1352,57 +1354,65 @@ app.get('/ogretmen-panel', async (req, res) => {
 
         classTabsHTML += `<button class="tab-btn ${activeClass}" onclick="showTab('cls-${clsName}', event)">🏫 ${clsName}</button>`;
 
-        // TÜM SINIFIN ÖĞRENCİLERİ TEK BİR EKRANDA ALT ALTA LİSTELENİR
+        // TÜM SINIFIN ÖĞRENCİLERİ TEK BİR EKRANDA ALT ALTA LİSTELENİR (YOKLAMA, KARNE VE ETKİNLİK KATILIMI)
         let studentsFormRows = classStudents.map(s => {
             let attStatus = (s.attendance && s.attendance[today]) ? s.attendance[today] : 'Geldi';
             let existingReport = (s.reports && s.reports[today]) ? s.reports[today] : {};
+            let eventPart = (s.eventParticipation && s.eventParticipation[today]) ? s.eventParticipation[today] : 'Katıldı';
 
             return `
             <div style="background:#f8fafc; padding:20px; border-radius:15px; border:1px solid #cbd5e1; margin-bottom:20px; box-shadow:0 4px 6px rgba(0,0,0,0.02);">
                 <input type="hidden" name="studentIds" value="${s.id}">
                 <h3 style="margin:0 0 12px 0; color:var(--blue); border-bottom:1px solid #e2e8f0; padding-bottom:8px;">👶 ${s.name}</h3>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:12px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:12px;">
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Yoklama Durumu</label>
-                        <select name="att_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
+                        <label style="font-size:11px; font-weight:bold; color:#475569;">Yoklama</label>
+                        <select name="att_${s.id}" style="margin:4px 0 0 0; padding:8px; font-size:13px;">
                             <option value="Geldi" ${attStatus==='Geldi'?'selected':''}>✔️ Geldi</option>
                             <option value="Gelmedi" ${attStatus==='Gelmedi'?'selected':''}>✖️ Gelmedi</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Uyku Durumu</label>
-                        <select name="uyku_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
+                        <label style="font-size:11px; font-weight:bold; color:#475569;">Uyku</label>
+                        <select name="uyku_${s.id}" style="margin:4px 0 0 0; padding:8px; font-size:13px;">
                             <option value="Uyumadı" ${existingReport.uyku==='Uyumadı'?'selected':''}>Uyumadı</option>
                             <option value="1 Saat Uyudu" ${existingReport.uyku==='1 Saat Uyudu'?'selected':''}>1 Saat Uyudu</option>
                             <option value="2+ Saat Uyudu" ${existingReport.uyku==='2+ Saat Uyudu'?'selected':''}>2+ Saat Uyudu</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Yemek Durumu</label>
-                        <select name="yemek_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
+                        <label style="font-size:11px; font-weight:bold; color:#475569;">Yemek</label>
+                        <select name="yemek_${s.id}" style="margin:4px 0 0 0; padding:8px; font-size:13px;">
                             <option value="Hepsini Yedi" ${existingReport.yemek==='Hepsini Yedi'?'selected':''}>Hepsini Yedi</option>
                             <option value="Yarısını Yedi" ${existingReport.yemek==='Yarısını Yedi'?'selected':''}>Yarısını Yedi</option>
                             <option value="Yemedi" ${existingReport.yemek==='Yemedi'?'selected':''}>Yemedi</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#475569;">Ruh Hali</label>
-                        <select name="ruh_${s.id}" style="margin:4px 0 0 0; padding:10px; font-size:14px;">
+                        <label style="font-size:11px; font-weight:bold; color:#475569;">Ruh Hali</label>
+                        <select name="ruh_${s.id}" style="margin:4px 0 0 0; padding:8px; font-size:13px;">
                             <option value="Neşeli 😊" ${existingReport.ruhHali==='Neşeli 😊'?'selected':''}>Neşeli 😊</option>
                             <option value="Sakin 😌" ${existingReport.ruhHali==='Sakin 😌'?'selected':''}>Sakin 😌</option>
                             <option value="Hareketli ⚡" ${existingReport.ruhHali==='Hareketli ⚡'?'selected':''}>Hareketli ⚡</option>
                         </select>
                     </div>
+                    <div>
+                        <label style="font-size:11px; font-weight:bold; color:#475569;">Etkinlik Katılımı</label>
+                        <select name="eventPart_${s.id}" style="margin:4px 0 0 0; padding:8px; font-size:13px;">
+                            <option value="Katıldı" ${eventPart==='Katıldı'?'selected':''}>✅ Katıldı</option>
+                            <option value="Katılmadı" ${eventPart==='Katılmadı'?'selected':''}>❌ Katılmadı</option>
+                        </select>
+                    </div>
                 </div>
-                <label style="font-size:12px; font-weight:bold; color:#475569;">Özel Veli Notu (İsteğe bağlı)</label>
-                <input type="text" name="msg_${s.id}" placeholder="Örn: Bugün harika oyunlar oynadı..." value="${existingReport.mesaj || ''}" style="margin:4px 0 0 0; font-size:14px; padding:10px;">
+                <label style="font-size:11px; font-weight:bold; color:#475569;">Özel Veli Notu (İsteğe bağlı)</label>
+                <input type="text" name="msg_${s.id}" placeholder="Örn: Bugün harika oyunlar oynadı..." value="${existingReport.mesaj || ''}" style="margin:4px 0 0 0; font-size:13px; padding:8px;">
             </div>`;
         }).join('') || '<p style="color:gray; text-align:center;">Bu sınıfta kayıtlı öğrenci yok.</p>';
 
         classContentsHTML += `
         <div id="cls-${clsName}" class="tab-content ${activeClass}">
             <div class="card">
-                <h3 style="color:var(--blue); margin-top:0;">📋 ${clsName} - Sınıf Yoklaması & Günlük Karneler</h3>
+                <h3 style="color:var(--blue); margin-top:0;">📋 ${clsName} - Sınıf Yoklaması, Karneler & Etkinlik Katılımı</h3>
                 <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Aşağıdan tüm öğrencilerin bilgilerini tek seferde doldurup en alttaki butonla topluca kaydedebilirsiniz.</p>
                 <form action="/teacher/save-batch-report" method="POST">
                     <input type="hidden" name="date" value="${today}">
@@ -1508,7 +1518,7 @@ app.get('/ogretmen-panel', async (req, res) => {
     </body></html>`);
 });
 
-// TOPLU SINIF KARNESİ VE YOKLAMA KAYDETME ROTASI
+// TOPLU SINIF KARNESİ, YOKLAMA VE ETKİNLİK KATILIMI KAYDETME ROTASI
 app.post('/teacher/save-batch-report', async (req, res) => {
     const db = await getDB();
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
@@ -1528,6 +1538,11 @@ app.post('/teacher/save-batch-report', async (req, res) => {
             if (!student.attendance) student.attendance = {};
             student.attendance[date] = attVal;
 
+            // Etkinlik Katılım Durumu
+            let eventPartVal = req.body[`eventPart_${id}`] || 'Katıldı';
+            if (!student.eventParticipation) student.eventParticipation = {};
+            student.eventParticipation[date] = eventPartVal;
+
             // Günlük Karne Kaydı (Veliler portalda anında görebilecek)
             if (teacher.rapor) {
                 if (!student.reports) student.reports = {};
@@ -1544,7 +1559,7 @@ app.post('/teacher/save-batch-report', async (req, res) => {
 
     db.markModified('students');
     await db.save();
-    res.send(`<script>alert("Tüm sınıfın yoklama ve günlük karneleri başarıyla kaydedildi! Veliler artık portallarından görebilir."); window.location.href="/ogretmen-panel";</script>`);
+    res.send(`<script>alert("Tüm sınıfın yoklama, günlük karneleri ve etkinlik katılım durumları başarıyla kaydedildi!"); window.location.href="/ogretmen-panel";</script>`);
 });
 
 app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res) => {
@@ -1662,7 +1677,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
 });
 
 // ============================================================================
-// 8. VELİ PORTALI
+// 8. VELİ PORTALI (VELİ PANELİNDE ETKİNLİK KATILIM DURUMU DAHİL)
 // ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1736,6 +1751,7 @@ app.get('/veli-panel', async (req, res) => {
 
     const today = new Date().toISOString().split('T')[0];
     const todayStatus = (student.attendance && student.attendance[today]) ? student.attendance[today] : 'Henüz Alınmadı';
+    const todayEventPart = (student.eventParticipation && student.eventParticipation[today]) ? student.eventParticipation[today] : 'Belirtilmedi';
     
     let todayReport = (student.reports && student.reports[today]) ? student.reports[today] : null;
     let reportHTML = todayReport ? `
@@ -1743,6 +1759,7 @@ app.get('/veli-panel', async (req, res) => {
             <p>😴 <b>Uyku:</b> ${todayReport.uyku}</p>
             <p>🍽️ <b>Yemek:</b> ${todayReport.yemek}</p>
             <p>🎭 <b>Ruh Hali:</b> ${todayReport.ruhHali}</p>
+            <p>🎨 <b>Etkinlik Durumu:</b> <span style="font-weight:bold; color:${todayEventPart==='Katıldı'?'#10b981':'#ef4444'}">${todayEventPart}</span></p>
             ${todayReport.mesaj ? `<p style="background:white; padding:10px; border-radius:8px;"><i>"${todayReport.mesaj}"</i></p>` : ''}
         </div>` : `<p style="text-align:center; color:gray;">Bugünkü karne henüz girilmedi.</p>`;
     
@@ -1763,7 +1780,7 @@ app.get('/veli-panel', async (req, res) => {
                 <b style="color:var(--blue); font-size:15px;">🎨 ${ev.title}</b><br>
                 <small style="color:#475569;">📅 Tarih: ${ev.date} | ⏰ Saat: ${ev.time}</small>
             </div>
-            <span style="background:#10b981; color:white; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold;">✅ Katılıyor</span>
+            <span style="background:#10b981; color:white; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold;">✅ Kayıtlı</span>
         </div>
     `).join('') || '<p style="text-align:center; color:gray;">Kayıtlı olduğunuz aktif bir etkinlik bulunmuyor.</p>';
 
@@ -1796,7 +1813,7 @@ app.get('/veli-panel', async (req, res) => {
                 <p style="margin:5px 0 0 0; color:#64748b;">${student.class}</p>
             </div>
             <div class="card">
-                <h3>📑 Günlük Gelişim Karnesi</h3>
+                <h3>📑 Günlük Gelişim Karnesi & Etkinlik Durumu</h3>
                 ${reportHTML}
             </div>
             <div class="card">
