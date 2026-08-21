@@ -1,10 +1,11 @@
-// --- ALBAYRAK ÇOCUK AKADEMİSİ - KESİN ÇÖZÜMLÜ FİNAL SÜRÜM ---
+// --- ALBAYRAK ÇOCUK AKADEMİSİ - %100 ÇALIŞAN FİNAL SÜRÜM ---
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const axios = require('axios');
+const FormData = require('form-data');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,7 +17,7 @@ app.use(express.static(__dirname));
 
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 15 * 1024 * 1024 } // 15 MB limit
+    limits: { fileSize: 25 * 1024 * 1024 } // 25 MB dosya boyutu limiti
 });
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/kres";
@@ -103,18 +104,18 @@ async function sendWaNotification(db, message) {
     }
 }
 
-// %100 Kararlı ImgBB Yükleme Fonksiyonu
-async function uploadToImgBB(fileBuffer, apiKey) {
+// %100 Uyumlu ImgBB Yükleme Fonksiyonu
+async function uploadToImgBB(fileBuffer, originalName, apiKey) {
     const key = apiKey || IMGBB_DEFAULT_KEY;
     try {
-        const body = new URLSearchParams();
-        body.append('image', fileBuffer.toString('base64'));
+        const form = new FormData();
+        form.append('image', fileBuffer.toString('base64'));
 
-        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${key}`, body, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${key}`, form, {
+            headers: form.getHeaders(),
             maxContentLength: Infinity,
             maxBodyLength: Infinity,
-            timeout: 45000
+            timeout: 60000
         });
 
         if (response.data && response.data.data && response.data.data.url) {
@@ -1097,7 +1098,7 @@ app.post('/manage/create-event', upload.single('image'), async (req, res) => {
     const apiKey = db.adminCredentials.imgbbApiKey || IMGBB_DEFAULT_KEY;
     let imgPath = '';
     if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer, apiKey);
+        imgPath = await uploadToImgBB(req.file.buffer, req.file.originalname, apiKey);
     }
     db.events.push({ 
         id: Date.now().toString(), 
@@ -1171,7 +1172,7 @@ app.post('/manage/update-event/:id', upload.single('image'), async (req, res) =>
         ev.quota = parseInt(req.body.quota); 
         ev.price = req.body.price;
         if(req.file) {
-            ev.imgUrl = await uploadToImgBB(req.file.buffer, apiKey);
+            ev.imgUrl = await uploadToImgBB(req.file.buffer, req.file.originalname, apiKey);
         }
         db.markModified('events');
         await db.save();
@@ -1259,7 +1260,7 @@ app.post('/manage/add-gallery', upload.array('images', 10), async (req, res) => 
     let imgUrls = [];
     if (req.files && req.files.length > 0) {
         for (let file of req.files) {
-            let url = await uploadToImgBB(file.buffer, apiKey);
+            let url = await uploadToImgBB(file.buffer, file.originalname, apiKey);
             if (url) imgUrls.push(url);
         }
     }
@@ -1314,7 +1315,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
         if (req.files && req.files.length > 0) {
             if(!g.imgUrls) g.imgUrls = [];
             for (let file of req.files) {
-                let url = await uploadToImgBB(file.buffer, apiKey);
+                let url = await uploadToImgBB(file.buffer, file.originalname, apiKey);
                 if (url) g.imgUrls.push(url);
             }
         }
@@ -1527,7 +1528,7 @@ app.post('/teacher/upload-gallery', upload.array('images', 10), async (req, res)
     let imgUrls = []; 
     if (req.files && req.files.length > 0) { 
         for (let file of req.files) { 
-            let url = await uploadToImgBB(file.buffer, apiKey); 
+            let url = await uploadToImgBB(file.buffer, file.originalname, apiKey); 
             if (url) imgUrls.push(url); 
         } 
     }
@@ -1572,7 +1573,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
     let imgPath = ''; 
     
     if (req.file) {
-        imgPath = await uploadToImgBB(req.file.buffer, apiKey);
+        imgPath = await uploadToImgBB(req.file.buffer, req.file.originalname, apiKey);
     }
     
     db.events.push({ 
@@ -1731,4 +1732,4 @@ app.get('/veli-panel', async (req, res) => {
     </body></html>`);
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ AKTİF: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ALBAYRAK ÇOCUK AKADEMİSİ: http://localhost:${PORT}`));
