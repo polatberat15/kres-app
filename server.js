@@ -76,7 +76,7 @@ async function getDB() {
     doc.students.forEach(s => {
         if (!s.attendance) s.attendance = {};
         if (!s.reports) s.reports = {}; 
-        if (!s.eventParticipation) s.eventParticipation = {}; // Etkinlik katılım durumu
+        if (!s.eventParticipation) s.eventParticipation = {};
         if (typeof s.feePaid === 'undefined') s.feePaid = false;
         if (!s.allergy) s.allergy = "Belirtilmedi";
         if (!s.registrationDate) s.registrationDate = new Date().toISOString().split('T')[0];
@@ -1301,7 +1301,7 @@ app.post('/manage/update-gallery/:id', upload.array('images', 10), async (req, r
 });
 
 // ============================================================================
-// 7. ÖĞRETMEN PANELİ (TOPLU SINIF KARNESİ, YOKLAMA VE ETKİNLİK KATILIMI)
+// 7. ÖĞRETMEN PANELİ
 // ============================================================================
 app.get('/login/ogretmen', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1354,7 +1354,6 @@ app.get('/ogretmen-panel', async (req, res) => {
 
         classTabsHTML += `<button class="tab-btn ${activeClass}" onclick="showTab('cls-${clsName}', event)">🏫 ${clsName}</button>`;
 
-        // TÜM SINIFIN ÖĞRENCİLERİ TEK BİR EKRANDA ALT ALTA LİSTELENİR (YOKLAMA, KARNE VE ETKİNLİK KATILIMI)
         let studentsFormRows = classStudents.map(s => {
             let attStatus = (s.attendance && s.attendance[today]) ? s.attendance[today] : 'Geldi';
             let existingReport = (s.reports && s.reports[today]) ? s.reports[today] : {};
@@ -1423,7 +1422,6 @@ app.get('/ogretmen-panel', async (req, res) => {
             </div>
         </div>`;
 
-        // SINIF ALBÜMÜ KISMI
         let photos = (db.classAlbums || []).filter(item => item && item.className === clsName);
         let photoGrid = photos.map(p => {
             let imgs = (p.imgUrls || []).map(u => `<img src="${u}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin:2px;">`).join('');
@@ -1452,7 +1450,6 @@ app.get('/ogretmen-panel', async (req, res) => {
             </div>
         </div>`;
 
-        // TOPLU ÖDEV KISMI
         let classHomeworks = (db.homeworks || []).filter(h => h.className === clsName);
         let hwListHTML = classHomeworks.map(h => `
             <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -1518,7 +1515,6 @@ app.get('/ogretmen-panel', async (req, res) => {
     </body></html>`);
 });
 
-// TOPLU SINIF KARNESİ, YOKLAMA VE ETKİNLİK KATILIMI KAYDETME ROTASI
 app.post('/teacher/save-batch-report', async (req, res) => {
     const db = await getDB();
     const teacher = db.teachers.find(t => t.username === req.cookies.teacher_user);
@@ -1533,17 +1529,14 @@ app.post('/teacher/save-batch-report', async (req, res) => {
     studentIds.forEach(id => {
         let student = db.students.find(s => s.id === id);
         if (student) {
-            // Yoklama Kaydı
             let attVal = req.body[`att_${id}`] || 'Geldi';
             if (!student.attendance) student.attendance = {};
             student.attendance[date] = attVal;
 
-            // Etkinlik Katılım Durumu
             let eventPartVal = req.body[`eventPart_${id}`] || 'Katıldı';
             if (!student.eventParticipation) student.eventParticipation = {};
             student.eventParticipation[date] = eventPartVal;
 
-            // Günlük Karne Kaydı (Veliler portalda anında görebilecek)
             if (teacher.rapor) {
                 if (!student.reports) student.reports = {};
                 student.reports[date] = {
@@ -1677,7 +1670,7 @@ app.post('/teacher/request-event', upload.single('image'), async (req, res) => {
 });
 
 // ============================================================================
-// 8. VELİ PORTALI (VELİ PANELİNDE ETKİNLİK KATILIM DURUMU DAHİL)
+// 8. VELİ PORTALI (ETKİNLİK KUTUSU KALDIRILDI, KARNE VE ÖDEVLER AKTİF)
 // ============================================================================
 app.get('/login/veli', (req, res) => {
     res.send(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">${portalTheme}</head><body>
@@ -1759,7 +1752,7 @@ app.get('/veli-panel', async (req, res) => {
             <p>😴 <b>Uyku:</b> ${todayReport.uyku}</p>
             <p>🍽️ <b>Yemek:</b> ${todayReport.yemek}</p>
             <p>🎭 <b>Ruh Hali:</b> ${todayReport.ruhHali}</p>
-            <p>🎨 <b>Etkinlik Durumu:</b> <span style="font-weight:bold; color:${todayEventPart==='Katıldı'?'#10b981':'#ef4444'}">${todayEventPart}</span></p>
+            <p>🎨 <b>Etkinlik Katılım Durumu:</b> <span style="font-weight:bold; color:${todayEventPart==='Katıldı'?'#10b981':'#ef4444'}">${todayEventPart}</span></p>
             ${todayReport.mesaj ? `<p style="background:white; padding:10px; border-radius:8px;"><i>"${todayReport.mesaj}"</i></p>` : ''}
         </div>` : `<p style="text-align:center; color:gray;">Bugünkü karne henüz girilmedi.</p>`;
     
@@ -1772,17 +1765,6 @@ app.get('/veli-panel', async (req, res) => {
             <p style="margin:8px 0 0 0; font-size:14px; color:#334155;">${h.content}</p>
         </div>
     `).join('') || '<p style="text-align:center; color:gray;">Sınıfınız için henüz ödev veya duyuru verilmedi.</p>';
-
-    const myEvents = db.events.filter(ev => (ev.reservations || []).some(r => r.phone === student.parentPhone || r.name.toLowerCase() === student.name.toLowerCase()));
-    const myEventsHTML = myEvents.map(ev => `
-        <div style="background:#eff6ff; padding:15px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <b style="color:var(--blue); font-size:15px;">🎨 ${ev.title}</b><br>
-                <small style="color:#475569;">📅 Tarih: ${ev.date} | ⏰ Saat: ${ev.time}</small>
-            </div>
-            <span style="background:#10b981; color:white; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:bold;">✅ Kayıtlı</span>
-        </div>
-    `).join('') || '<p style="text-align:center; color:gray;">Kayıtlı olduğunuz aktif bir etkinlik bulunmuyor.</p>';
 
     const photos = (db.classAlbums || []).filter(item => item && item.className === student.class);
     const galleryHTML = photos.map(p => {
@@ -1819,10 +1801,6 @@ app.get('/veli-panel', async (req, res) => {
             <div class="card">
                 <h3>📚 Öğretmen Ödevleri & Duyurular</h3>
                 ${homeworkHTML}
-            </div>
-            <div class="card">
-                <h3>🎨 Katıldığım Etkinlikler</h3>
-                ${myEventsHTML}
             </div>
             <div class="card">
                 <h3>📸 Sınıf Albümü & Etkinlikler</h3>
