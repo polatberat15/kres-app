@@ -80,7 +80,7 @@ async function uploadToDrive(fileObject) {
 }
 
 const MemorySchema = new mongoose.Schema({
-    accessPassword: { type: String, default: "1402" },
+    accessPassword: { type: String, default: "1513" },
     gallery: { type: Array, default: [] }
 });
 
