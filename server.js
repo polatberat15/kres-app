@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - FULL ARKA PLAN KALPLİ SÜRÜM
+// BİZİM ANI DEFTERİMİZ - ŞİFRE: 1513 VE ROMANTİK SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -22,7 +22,7 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:polat12345@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('❤️ Romantik Anı Defteri Bağlandı!'))
@@ -88,7 +88,13 @@ const MemoryModel = mongoose.model('MemoryData', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
-    if (!doc) doc = await MemoryModel.create({ accessPassword: "1402", gallery: [] });
+    // Eğer veritabanında eski şifre varsa veya hiç yoksa 1513 olarak güncelleyelim
+    if (!doc) {
+        doc = await MemoryModel.create({ accessPassword: "1513", gallery: [] });
+    } else if (doc.accessPassword !== "1513") {
+        doc.accessPassword = "1513";
+        await doc.save();
+    }
     if (!Array.isArray(doc.gallery)) doc.gallery = [];
     return doc;
 }
@@ -111,7 +117,6 @@ const themeStyle = `
         position: relative;
         min-height: 100vh;
     }
-    /* Sayfanın en üstünden en altına kadar kalplerle ve minik simgelerle kaplı bir arka plan dokusu */
     body::before {
         content: "♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕";
         position: absolute;
@@ -157,7 +162,7 @@ app.get('/', async (req, res) => {
                 <h3 style="color:var(--rose); margin-top:0;">🔒 Kalbinin Anahtarı</h3>
                 <p style="font-size:13px; color:#881337; margin-bottom:18px;">Girmek için özel şifremizi gir sevgilim:</p>
                 <input type="password" name="password" placeholder="••••" required style="text-align:center; font-size:24px; letter-spacing:6px;">
-                <button type="submit" class="btn-main" style="margin-top:12px; padding:14px; font-size:16px;">Kapıyı Arala 💕</button>
+                <button type="submit" class="btn-main" style="margin-top:12px; padding:14px; font-size:16px;">Kapıyı Arcala 💕</button>
             </form>
         </div>
     </body></html>`);
