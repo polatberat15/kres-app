@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - ŞİFRE: 1513 VE ROMANTİK SÜRÜM
+// BİZİM ANI DEFTERİMİZ - MOBİL UYUMLU DÜZELTİLMİŞ SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -88,7 +88,6 @@ const MemoryModel = mongoose.model('MemoryData', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
-    // Eğer veritabanında eski şifre varsa veya hiç yoksa 1513 olarak güncelleyelim
     if (!doc) {
         doc = await MemoryModel.create({ accessPassword: "1513", gallery: [] });
     } else if (doc.accessPassword !== "1513") {
@@ -133,8 +132,17 @@ const themeStyle = `
         z-index: 0;
         overflow: hidden;
     }
-    .header-card { background: linear-gradient(135deg, #f43f5e, #fb7185); color: white; padding: 35px 20px; border-radius: 0 0 35px 35px; text-align: center; box-shadow: 0 10px 25px rgba(244, 63, 94, 0.25); position: relative; z-index: 2; }
-    .menu-btn { position: absolute; top: 22px; right: 20px; background: rgba(255,255,255,0.25); border: none; color: white; font-size: 22px; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.2s; }
+    .header-card { 
+        background: linear-gradient(135deg, #f43f5e, #fb7185); 
+        color: white; 
+        padding: 50px 20px 35px 20px; /* Üst kısımdan telefon çentiği için pay bırakıldı */
+        border-radius: 0 0 35px 35px; 
+        text-align: center; 
+        box-shadow: 0 10px 25px rgba(244, 63, 94, 0.25); 
+        position: relative; 
+        z-index: 2; 
+    }
+    .menu-btn { position: absolute; top: 35px; right: 20px; background: rgba(255,255,255,0.25); border: none; color: white; font-size: 22px; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.2s; }
     .menu-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(76, 5, 25, 0.4); z-index: 100; backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(244,63,94,0.2); position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid #ffe4e6; z-index: 101; }
@@ -153,16 +161,16 @@ app.get('/', async (req, res) => {
     if (req.cookies.memory_auth === 'true') return res.redirect('/anilar');
     
     res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bizim Dünyamız</title>${themeStyle}</head><body>
-        <div class="header-card" style="padding: 55px 20px;">
-            <h1 style="margin:0; font-size:32px;">❤️ Sonsuz Hikayemiz</h1>
-            <p style="margin:10px 0 0 0; opacity:0.9; font-size:14px;">Burası sadece ikimizin kalbinin attığı yer...</p>
+        <div class="header-card">
+            <h1 style="margin:0; font-size:30px;">❤️ Sonsuz Hikayemiz</h1>
+            <p style="margin:8px 0 0 0; opacity:0.9; font-size:13px;">Burası sadece ikimizin kalbinin attığı yer...</p>
         </div>
-        <div style="max-width:380px; margin:50px auto; padding:0 20px; position:relative; z-index:2;">
+        <div style="max-width:380px; margin:40px auto; padding:0 20px; position:relative; z-index:2;">
             <form action="/giris" method="POST" class="card" style="text-align:center; padding:30px 20px;">
                 <h3 style="color:var(--rose); margin-top:0;">🔒 Kalbinin Anahtarı</h3>
                 <p style="font-size:13px; color:#881337; margin-bottom:18px;">Girmek için özel şifremizi gir sevgilim:</p>
                 <input type="password" name="password" placeholder="••••" required style="text-align:center; font-size:24px; letter-spacing:6px;">
-                <button type="submit" class="btn-main" style="margin-top:12px; padding:14px; font-size:16px;">Kapıyı Arcala 💕</button>
+                <button type="submit" class="btn-main" style="margin-top:12px; padding:14px; font-size:16px;">Kapıyı Aç 💕</button>
             </form>
         </div>
     </body></html>`);
