@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - MOBİL UYUMLU DÜZELTİLMİŞ SÜRÜM
+// BİZİM ANI DEFTERİMİZ - SESLİ NOT & CANLI KAYIT SÜRÜMÜ
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -25,7 +25,7 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('❤️ Romantik Anı Defteri Bağlandı!'))
+    .then(() => console.log('❤️ Romantik Anı Defteri Sesli Sürüm Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const GOOGLE_FOLDER_ID = "1KIwGp39OyIZpdsL7rlQ72LCmDYLAMqAF";
@@ -101,11 +101,7 @@ async function getDB() {
 const themeStyle = `
 <style>
     :root { --rose: #e11d48; --pink: #f43f5e; --bg: #fff1f2; --text: #4c0519; }
-    html, body { 
-        height: 100%;
-        margin: 0;
-        padding: 0;
-    }
+    html, body { height: 100%; margin: 0; padding: 0; }
     body { 
         font-family: 'Segoe UI', sans-serif; 
         background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%); 
@@ -117,35 +113,27 @@ const themeStyle = `
         min-height: 100vh;
     }
     body::before {
-        content: "♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕";
+        content: "♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕";
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        top: 0; left: 0; width: 100%; height: 100%;
         text-align: justify;
         color: rgba(225, 29, 72, 0.16);
-        font-size: 26px;
-        line-height: 2.2;
-        letter-spacing: 25px;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
+        font-size: 26px; line-height: 2.2; letter-spacing: 25px;
+        pointer-events: none; z-index: 0; overflow: hidden;
     }
     .header-card { 
         background: linear-gradient(135deg, #f43f5e, #fb7185); 
         color: white; 
-        padding: 50px 20px 35px 20px; /* Üst kısımdan telefon çentiği için pay bırakıldı */
+        padding: 50px 20px 35px 20px; 
         border-radius: 0 0 35px 35px; 
         text-align: center; 
         box-shadow: 0 10px 25px rgba(244, 63, 94, 0.25); 
-        position: relative; 
-        z-index: 2; 
+        position: relative; z-index: 2; 
     }
     .menu-btn { position: absolute; top: 35px; right: 20px; background: rgba(255,255,255,0.25); border: none; color: white; font-size: 22px; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.2s; }
     .menu-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(76, 5, 25, 0.4); z-index: 100; backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
-    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(244,63,94,0.2); position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid #ffe4e6; z-index: 101; }
+    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(244,63,94,0.2); position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid #ffe4e6; z-index: 101; max-height: 90vh; overflow-y: auto; }
     @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .card { background: white; padding: 22px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #ffe4e6; position: relative; z-index: 2; }
     .btn-main { background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 12px 20px; border-radius: 14px; font-weight: bold; cursor: pointer; display: inline-block; text-decoration: none; text-align: center; width: 100%; box-shadow: 0 4px 12px rgba(244,63,94,0.3); transition: 0.2s; }
@@ -155,6 +143,9 @@ const themeStyle = `
     .memory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; position: relative; z-index: 2; }
     .memory-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(244,63,94,0.08); border: 1px solid #ffe4e6; display: flex; flex-direction: column; transition: 0.3s; }
     .memory-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(244,63,94,0.15); }
+    .rec-btn { background: #ef4444; color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-right: 5px; font-size: 13px; }
+    .rec-btn.recording { background: #b91c1c; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>`;
 
 app.get('/', async (req, res) => {
@@ -193,9 +184,13 @@ app.get('/anilar', async (req, res) => {
     let memoriesHTML = db.gallery.map(m => {
         let mediaEl = '';
         if (m.imgUrl) {
-            mediaEl = (m.imgUrl.includes('.mp4') || m.imgUrl.includes('video'))
-                ? `<video controls width="100%" style="height:260px; object-fit:cover; background:black;"><source src="${m.imgUrl}"></video>`
-                : `<img src="${m.imgUrl}" style="width:100%; height:260px; object-fit:cover; display:block;">`;
+            if (m.imgUrl.includes('.mp4') || m.imgUrl.includes('video')) {
+                mediaEl = `<video controls width="100%" style="height:260px; object-fit:cover; background:black;"><source src="${m.imgUrl}"></video>`;
+            } else if (m.imgUrl.includes('.mp3') || m.imgUrl.includes('audio') || m.imgUrl.includes('webm') || m.imgUrl.includes('wav')) {
+                mediaEl = `<div style="padding:30px 20px; background:linear-gradient(135deg, #ffe4e6, #fecdd3); text-align:center;"><p style="margin:0 0 10px 0; font-weight:bold; color:var(--rose);">🎙️ Sesli Not</p><audio controls width="100%" style="width:100%;"><source src="${m.imgUrl}"></audio></div>`;
+            } else {
+                mediaEl = `<img src="${m.imgUrl}" style="width:100%; height:260px; object-fit:cover; display:block;">`;
+            }
         } else {
             mediaEl = `<div style="height:120px; background:linear-gradient(135deg, #ffe4e6, #fecdd3); display:flex; align-items:center; justify-content:center; font-size:36px;">💌</div>`;
         }
@@ -222,16 +217,26 @@ app.get('/anilar', async (req, res) => {
         <div id="memoryModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--rose); margin:0;">✨ Yeni Anı veya Not</h3>
+                    <h3 style="color:var(--rose); margin:0;">✨ Yeni Anı / Sesli Not</h3>
                     <button onclick="toggleModal(false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#881337; padding:0;">&times;</button>
                 </div>
-                <form action="/ekle" method="POST" enctype="multipart/form-data" style="margin:0;">
+                <form id="memoryForm" action="/ekle" method="POST" enctype="multipart/form-data" style="margin:0;">
                     <label style="font-size:12px; font-weight:bold; color:#881337;">Başlık</label>
-                    <input type="text" name="title" placeholder="Örn: İçimden geldi / İlk buluşmamız" required>
+                    <input type="text" name="title" placeholder="Örn: Sesli mesajım / İçimden geldi" required>
                     
-                    <label style="font-size:12px; font-weight:bold; color:#881337;">Fotoğraf veya Video (İsteğe Bağlı)</label>
-                    <input type="file" name="image" accept="image/*,video/*" style="background:white; padding:8px;">
+                    <label style="font-size:12px; font-weight:bold; color:#881337;">Medya veya Ses Dosyası Seç (Foto, Video, Ses)</label>
+                    <input type="file" name="image" id="fileInput" accept="image/*,video/*,audio/*" style="background:white; padding:8px;">
                     
+                    <!-- Canlı Ses Kaydı Bölümü -->
+                    <div style="background:#fff1f2; padding:12px; border-radius:12px; margin-bottom:14px; border:1px dashed #fda4af; text-align:center;">
+                        <p style="margin:0 0 8px 0; font-size:12px; font-weight:bold; color:#881337;">🎙️ Veya Mikrofondan Canlı Ses Kaydet</p>
+                        <button type="button" id="recBtn" class="rec-btn" onclick="toggleRecording()">🔴 Kaydı Başlat</button>
+                        <span id="recStatus" style="font-size:12px; color:#6b7280; display:block; margin-top:6px;">Kayıt yapılmadı</span>
+                        <audio id="audioPlayback" controls style="width:100%; margin-top:8px; display:none;"></audio>
+                    </div>
+                    <!-- Gizli input ile canlı ses verisini sunucuya yollayacağız -->
+                    <input type="hidden" name="audioData" id="audioData">
+
                     <label style="font-size:12px; font-weight:bold; color:#881337;">Tatlı Notun / Hissettiklerin</label>
                     <textarea name="note" placeholder="Bugün aklımdasın..." rows="3" required></textarea>
                     
@@ -255,6 +260,56 @@ app.get('/anilar', async (req, res) => {
             function toggleModal(open) {
                 document.getElementById('memoryModal').style.display = open ? 'flex' : 'none';
             }
+
+            let mediaRecorder;
+            let audioChunks = [];
+            let isRecording = false;
+
+            async function toggleRecording() {
+                const recBtn = document.getElementById('recBtn');
+                const recStatus = document.getElementById('recStatus');
+                const audioPlayback = document.getElementById('audioPlayback');
+                const audioDataInput = document.getElementById('audioData');
+                const fileInput = document.getElementById('fileInput');
+
+                if (!isRecording) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+
+                        mediaRecorder.ondataavailable = event => {
+                            audioChunks.push(event.data);
+                        };
+
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const reader = new FileReader();
+                            reader.readAsDataURL(audioBlob);
+                            reader.onloadend = function() {
+                                audioDataInput.value = reader.result;
+                                audioPlayback.src = reader.result;
+                                audioPlayback.style.display = 'block';
+                            };
+                            fileInput.value = ''; // Dosya seçimini sıfırla
+                        };
+
+                        mediaRecorder.start();
+                        isRecording = true;
+                        recBtn.textContent = "⏹️ Kaydı Durdur";
+                        recBtn.classList.add('recording');
+                        recStatus.textContent = "Kayıt yapılıyor... Konuşmaya başla 💕";
+                    } catch (err) {
+                        alert("Mikrofon izni alınamadı!");
+                    }
+                } else {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    recBtn.textContent = "🔴 Yeniden Kaydet";
+                    recBtn.classList.remove('recording');
+                    recStatus.textContent = "Ses kaydı başarıyla alındı! ✨";
+                }
+            }
         </script>
     </body></html>`);
 });
@@ -264,12 +319,31 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
     const db = await getDB();
 
     let imgUrl = '';
-    if (req.file && req.file.buffer.length > 0) {
+    
+    // Eğer canlı ses kaydı yapıldıysa base64 verisini Drive'a uygun formata çevirelim
+    if (req.body.audioData) {
+        try {
+            const matches = req.body.audioData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                const buffer = Buffer.from(matches[2], 'base64');
+                const fakeFile = {
+                    buffer: buffer,
+                    originalname: 'sesli-not.webm',
+                    mimetype: matches[1]
+                };
+                imgUrl = await uploadToDrive(fakeFile);
+            }
+        } catch (err) {
+            console.error("Canlı Ses Yükleme Hatası:", err);
+        }
+    } 
+    // Eğer normal dosya (foto, video veya ses dosyası) yüklendiyse
+    else if (req.file && req.file.buffer.length > 0) {
         try {
             imgUrl = await uploadToDrive(req.file);
         } catch (err) {
-            console.error("Drive Yükleme Hatası:", err);
-            return res.send(`<script>alert("Fotoğraf yüklenirken hata oluştu!"); window.location.href="/anilar";</script>`);
+            console.error("Dosya Yükleme Hatası:", err);
+            return res.send(`<script>alert("Dosya yüklenirken hata oluştu!"); window.location.href="/anilar";</script>`);
         }
     }
 
@@ -301,4 +375,4 @@ app.get('/cikis', (req, res) => {
     res.redirect('/');
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Sesli Not Destekli Romantik Anı Defteri Çalışıyor: http://localhost:${PORT}`));
