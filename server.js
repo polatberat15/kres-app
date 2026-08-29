@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - MÜZİK, KALP YAĞMURU, BUCKET LIST VE GECE MODU SÜRÜMÜ
+// BİZİM ANI DEFTERİMİZ - KOLAY MÜZİK YÖNETİMLİ TAM SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -25,7 +25,7 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('❤️ Romantik Anı Defteri Tam Sürüm Bağlandı!'))
+    .then(() => console.log('❤️ Romantik Anı Defteri Kolay Müzik Sürümü Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const GOOGLE_FOLDER_ID = "1KIwGp39OyIZpdsL7rlQ72LCmDYLAMqAF";
@@ -33,7 +33,7 @@ const credentials = {
   "type": "service_account",
   "project_id": "woven-plane-506911-m8",
   "private_key_id": "8044520d001b5a5997aecfe45ec07da24a61b5a5",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqwOSrubTVKk27\nu+N0DAx8os9WpQWmhHo3ikluRJWPb1sG/g5ESi75aY/9idLlFAca1JNMOQh0iqYd\nlI8mlTzO18F0gGaisAQREn2fIb/MuH/WoT3lJSc9f3/fpE8PrlmLqCwDz/j3kSkT\n4Lf7OJnTO6Xrb1MooPiDDvwMQgqIzjSwgJ2CGJkBRLgpYTrxYYibxyR2RY6hbk92\nd7r99mJIFAPklQ4thgJoCNT36hvo+/K5iTKIurUB9cFLMayOgy5bF+Brdn2snziF\nLOQuxgGf0Wwto0ggHty+9XTg5xWcks+kISLsrNZ/obiGx8eav/HhICsX81kYUTzz\nHDV2dzNNAgMBAAECggEAKU8MkyHUZlx7XT89bcnrbGyb0eeO2CPFCHI3RQqpDv/+\nytCEBY/X0OVxnQHuiBZiCKLkNqS2j7EqMk5KGmiwww6NweA9VD7WYQXy56BLzRxW\nawdrmKe2GEnj1ugia1X/2ko3Sb3Sypuuzx0GjWt6RVCxGWW/fb0Bmf0yS0nf0AwD\nW//I+G5vMPknjPT7QIPyEjt6YGCGoox7lYLSD8tCmLa+4lR7xaYqwDLH2TLDJ+jf\nqPiIzrb55lgegv/aCiLDHYFsU4yeZIh9x5TvFXiTlG/7xeT+qerD6kTU1ljqkgoc\n4AxTGgQvlxJ2KQTILE8GVxFIXaUVP8StnoSeX3UrkQKBgQDhw8nPfsSAOGA83lXd\naguDieQzZKCfEYBsj2QigZaV16iw0DzBjBNj/3p1hWbXT5Yef0l+y+sKuwmSWxQp\nln+h9va3fIf7luEBXv7bESlZGkGa3ZGvdpPSPqV75ZeEEWV+xiE1yr7xwwCNysYi\nhxXJpBey4M94FJD/p1FmCO21PQKBgQDBnxMwGZie9MwsLFAaHNmkK96c1aUpYcW4\NhAoxyTSKNPttsw8+4Or0wnN+60aIYRaXiXKWMhXQAxBvy5lcOHd2ri00t6rVkVK\7Gl372sDykCaZ30zQ19semYVZ6RnbAb9RAK1i+UG/d51qr4c2canS1tuimzPjOzm\nDpSrIx/3UQKBgQCp2RuGIJADCubURE0DE9nvrxjg1U7F/WvJwKMMFsRMnP/Lbg6X\naiPYcocVzTQOvlBpR0fqvc1puEc+NYlYtGH3Xw5EAstnKx7CYk6IT0P1RfyfXxxQ\njnwti3YCXTt9X30lQDgR+SNoTVWoVypzJX/twKcXq2xKoeZof9+MTSFQ3QKBgQCy\nXvDXVA1FCvH5E82rcL6TvpJzW2KvT9JNVQjn+CYUseYjTU60M2Tm6yFSMLQUqaH7\nelZIJihSML/Z5d1BOI/ryS517vmRUIW/czHqepbUxANl+0bc7gk/rzbSK0vKtztt\ILV6OGmCWmgRcH15qKqYvhR6Lm31erdXbUFKs64kMQKBgBYIWnNfEnnA4pi8w0Yt\nJSfkl7jjyaLxF2vt0ZeE+4aTEmMMw8Mh5tIgqKNBurq9CWxqJBJM4w2OD0MGDfVq\nlATOW/kXxZcDi4eidDT/nES3XyQnrYLSt2VdH1NRQu3RdG51rE+/O9F0jiF+JoMA\nZkOIsXqAReUoz0CcDalZnLHx\n-----END PRIVATE KEY-----\n",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqwOSrubTVKk27\nu+N0DAx8os9WpQWmhHo3ikluRJWPb1sG/g5ESi75aY/9idLlFAca1JNMOQh0iqYd\nlI8mlTzO18F0gGaisAQREn2fIb/MuH/WoT3lJSc9f3/fpE8PrlmLqCwDz/j3kSkT\n4Lf7OJnTO6Xrb1MooPiDDvwMQgqIzjSwgJ2CGJkBRLgpYTrxYYibxyR2RY6hbk92\nd7r99mJIFAPklQ4thgJoCNT36hvo+/K5iTKIurUB9cFLMayOgy5bF+Brdn2snziF\nLOQuxgGf0Wwto0ggHty+9XTg5xWcks+kISLsrNZ/obiGx8eav/HhICsX81kYUTzz\nHDV2dzNNAgMBAAECggEAKU8MkyHUZlx7XT89bcnrbGyb0eeO2CPFCHI3RQqpDv/+\nytCEBY/X0OVxnQHuiBZiCKLkNqS2j7EqMk5KGmiwww6NweA9VD7WYQXy56BLzRxW\nawdrmKe2GEnj1ugia1X/2ko3Sb3Sypuuzx0GjWt6RVCxGWW/fb0Bmf0yS0nf0AwD\nW//I+G5vMPknjPT7QIPyEjt6YGCGoox7lYLSD8tCmLa+4lR7xaYqwDLH2TLDJ+jf\nqPiIzrb55lgegv/aCiLDHYFsU4yeZIh9x5TvFXiTlG/7xeT+qerD6kTU1ljqkgoc\n4AxTGgQvlxJ2KQTILE8GVxFIXaUVP8StnoSeX3UrkQKBgQDhw8nPfsSAOGA83lXd\naguDieQzZKCfEYBsj2QigZaV16iw0DzBjBNj/3p1hWbXT5Yef0l+y+sKuwmSWxQp\nln+h9va3fIf7luEBXv7bESlZGkGa3ZGvdpPSPqV75ZeEEWV+xiE1yr7xwwCNysYi\nhxXJpBey4M94FJD/p1FmCO21PQKBgQDBnxMwGZie9MwsLFAaHNmkK96c1aUpYcW4\NhAoxyTSKNPttsw8+4Or0wnN+60aIYRaXiXKWMhXQAxBvy5lcOHd2ri00t6rVkVK\7Gl372sDykCaZ30zQ19semYVZ6RnbAb9RAK1i+UG/d51qr4c2canS1tuimzPjOzm\DpSrIx/3UQKBgQCp2RuGIJADCubURE0DE9nvrxjg1U7F/WvJwKMMFsRMnP/Lbg6X\naiPYcocVzTQOvlBpR0fqvc1puEc+NYlYtGH3Xw5EAstnKx7CYk6IT0P1RfyfXxxQ\njnwti3YCXTt9X30lQDgR+SNoTVWoVypzJX/twKcXq2xKoeZof9+MTSFQ3QKBgQCy\nXvDXVA1FCvH5E82rcL6TvpJzW2KvT9JNVQjn+CYUseYjTU60M2Tm6yFSMLQUqaH7\nelZIJihSML/Z5d1BOI/ryS517vmRUIW/czHqepbUxANl+0bc7gk/rzbSK0vKtztt\ILV6OGmCWmgRcH15qKqYvhR6Lm31erdXbUFKs64kMQKBgBYIWnNfEnnA4pi8w0Yt\JSfkl7jjyaLxF2vt0ZeE+4aTEmMMw8Mh5tIgqKNBurq9CWxqJBJM4w2OD0MGDfVq\nlATOW/kXxZcDi4eidDT/nES3XyQnrYLSt2VdH1NRQu3RdG51rE+/O9F0jiF+JoMA\ZkOIsXqAReUoz0CcDalZnLHx\n-----END PRIVATE KEY-----\n",
   "client_email": "an-defteri@woven-plane-506911-m8.iam.gserviceaccount.com",
   "client_id": "107057228797529025368",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -86,7 +86,8 @@ const MemorySchema = new mongoose.Schema({
         { id: '1', text: 'Birlikte gün batımını izlemek 🌅', completed: false },
         { id: '2', text: 'En sevdiğimiz şarkıyla dans etmek 🎶', completed: false },
         { id: '3', text: 'Birlikte kahve içip saatlerce konuşmak ☕', completed: false }
-    ]}
+    ]},
+    bgMusicUrl: { type: String, default: "https://www.bensound.com/bensound-music/bensound-tenderness.mp3" }
 });
 
 const MemoryModel = mongoose.model('MemoryData', MemorySchema);
@@ -94,7 +95,7 @@ const MemoryModel = mongoose.model('MemoryData', MemorySchema);
 async function getDB() {
     let doc = await MemoryModel.findOne();
     if (!doc) {
-        doc = await MemoryModel.create({ accessPassword: "1513", gallery: [], bucketList: [] });
+        doc = await MemoryModel.create({ accessPassword: "1513", gallery: [], bucketList: [], bgMusicUrl: "https://www.bensound.com/bensound-music/bensound-tenderness.mp3" });
     } else if (doc.accessPassword !== "1513") {
         doc.accessPassword = "1513";
         await doc.save();
@@ -164,8 +165,8 @@ const themeStyle = `
         box-shadow: 0 10px 25px rgba(244, 63, 94, 0.25); 
         position: relative; z-index: 2; 
     }
-    .top-buttons { position: absolute; top: 35px; right: 20px; display: flex; gap: 10px; }
-    .icon-btn { background: rgba(255,255,255,0.25); border: none; color: white; font-size: 18px; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.2s; }
+    .top-buttons { position: absolute; top: 35px; right: 20px; display: flex; gap: 8px; }
+    .icon-btn { background: rgba(255,255,255,0.25); border: none; color: white; font-size: 16px; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.2s; }
     .icon-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
     
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(76, 5, 25, 0.5); z-index: 100; backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
@@ -183,11 +184,9 @@ const themeStyle = `
     .memory-card { background: var(--card-bg); color: var(--text); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(0,0,0,0.06); border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
     .memory-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(244,63,94,0.15); }
     
-    /* Kalp Yağmuru Efekti için CSS */
     .falling-heart { position: fixed; top: -20px; color: #f43f5e; font-size: 20px; user-select: none; pointer-events: none; z-index: 999; animation: fall linear forwards; }
     @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(360deg); opacity: 0; } }
 
-    /* Bucket List Kutusu */
     .bucket-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--input-bg); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color); }
 </style>`;
 
@@ -261,20 +260,36 @@ app.get('/anilar', async (req, res) => {
     res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bizim Anılarımız</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         
-        <!-- Gizli Arka Plan Müzik Çalar (Otomatik çalma özellikli romantik melodi) -->
+        <!-- Bağımsız Arka Plan Müzik Çalar -->
         <audio id="bgMusic" loop>
-            <source src="https://www.bensound.com/bensound-music/bensound-tenderness.mp3" type="audio/mpeg">
+            <source src="${db.bgMusicUrl}" type="audio/mpeg">
         </audio>
 
         <div class="header-card">
             <div class="top-buttons">
                 <button class="icon-btn" onclick="toggleTheme()" title="Gece/Gündüz Modu">🌓</button>
                 <button class="icon-btn" onclick="toggleMusic()" id="musicBtn" title="Müzik Aç/Kapat">🎵</button>
+                <button class="icon-btn" onclick="toggleModal('musicSettingsModal', true)" title="Müzik Değiştir">⚙️</button>
                 <button class="icon-btn" onclick="toggleModal('memoryModal', true)" title="Yeni Anı Ekle">➕</button>
                 <button class="icon-btn" onclick="toggleModal('bucketModal', true)" title="Bucket List">🎯</button>
             </div>
             <h1 style="margin:0; font-size:26px;">💖 Bizim Dünyamız</h1>
             <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Gözlerin aklıma geldiğinde kalbim gülümsüyor...</p>
+        </div>
+
+        <!-- Kolay Müzik Değiştirme Modalı -->
+        <div id="musicSettingsModal" class="modal-overlay">
+            <div class="modal-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="color:var(--rose); margin:0;">🎶 Arka Plan Müziğini Değiştir</h3>
+                    <button onclick="toggleModal('musicSettingsModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
+                </div>
+                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">İstediğin şarkının direkt ses dosyası bağlantısını (URL) buraya yapıştırabilirsin:</p>
+                <form action="/muzik-guncelle" method="POST" style="margin:0;">
+                    <input type="text" name="bgMusicUrl" value="${db.bgMusicUrl}" placeholder="https://..." required>
+                    <button type="submit" class="btn-main" style="padding:12px; font-size:14px; margin-top:5px;">Müziği Kaydet ve Değiştir ✨</button>
+                </form>
+            </div>
         </div>
 
         <!-- Yeni Anı Modalı -->
@@ -340,13 +355,11 @@ app.get('/anilar', async (req, res) => {
                 document.getElementById(modalId).style.display = open ? 'flex' : 'none';
             }
 
-            // Tema Değiştirme (Gece/Gündüz)
             function toggleTheme() {
                 const isDark = document.body.classList.toggle('dark-mode');
                 document.cookie = "theme=" + (isDark ? "dark" : "light") + "; max-age=31536000; path=/";
             }
 
-            // Arka Planda Müzik Kontrolü
             const bgMusic = document.getElementById('bgMusic');
             let isPlaying = false;
             function toggleMusic() {
@@ -362,7 +375,6 @@ app.get('/anilar', async (req, res) => {
                 }
             }
 
-            // Sayfada Uçuşan Kalp Yağmuru Efekti
             function createFallingHeart() {
                 const heart = document.createElement('div');
                 heart.classList.add('falling-heart');
@@ -375,7 +387,6 @@ app.get('/anilar', async (req, res) => {
             }
             setInterval(createFallingHeart, 600);
 
-            // Canlı Ses Kaydı Fonksiyonu
             let mediaRecorder;
             let audioChunks = [];
             let isRecording = false;
@@ -460,7 +471,15 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
     res.redirect('/anilar');
 });
 
-// Bucket List Ekleme
+// Arka Plan Müziğini Güncelleme Rotası
+app.post('/muzik-guncelle', async (req, res) => {
+    if (req.cookies.memory_auth !== 'true') return res.redirect('/');
+    const db = await getDB();
+    db.bgMusicUrl = req.body.bgMusicUrl;
+    await db.save();
+    res.redirect('/anilar');
+});
+
 app.post('/bucket-ekle', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -470,7 +489,6 @@ app.post('/bucket-ekle', async (req, res) => {
     res.redirect('/anilar');
 });
 
-// Bucket List Tamamlama Durumunu Değiştirme
 app.get('/bucket-toggle/:id', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -495,4 +513,4 @@ app.get('/cikis', (req, res) => {
     res.redirect('/');
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Tam Sürüm Çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Kolay Müzik Sürümü Çalışıyor: http://localhost:${PORT}`));
