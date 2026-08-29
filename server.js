@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - KOLAY MÜZİK YÖNETİMLİ TAM SÜRÜM
+// BİZİM ANI DEFTERİMİZ - GİZLİ SES YÜKLEME SÜRÜMÜ
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -25,7 +25,7 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('❤️ Romantik Anı Defteri Kolay Müzik Sürümü Bağlandı!'))
+    .then(() => console.log('❤️ Romantik Anı Defteri Gizli Müzik Sürümü Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const GOOGLE_FOLDER_ID = "1KIwGp39OyIZpdsL7rlQ72LCmDYLAMqAF";
@@ -87,7 +87,7 @@ const MemorySchema = new mongoose.Schema({
         { id: '2', text: 'En sevdiğimiz şarkıyla dans etmek 🎶', completed: false },
         { id: '3', text: 'Birlikte kahve içip saatlerce konuşmak ☕', completed: false }
     ]},
-    bgMusicUrl: { type: String, default: "https://www.bensound.com/bensound-music/bensound-tenderness.mp3" }
+    bgMusicUrl: { type: String, default: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3" }
 });
 
 const MemoryModel = mongoose.model('MemoryData', MemorySchema);
@@ -95,7 +95,7 @@ const MemoryModel = mongoose.model('MemoryData', MemorySchema);
 async function getDB() {
     let doc = await MemoryModel.findOne();
     if (!doc) {
-        doc = await MemoryModel.create({ accessPassword: "1513", gallery: [], bucketList: [], bgMusicUrl: "https://www.bensound.com/bensound-music/bensound-tenderness.mp3" });
+        doc = await MemoryModel.create({ accessPassword: "1513", gallery: [], bucketList: [], bgMusicUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3" });
     } else if (doc.accessPassword !== "1513") {
         doc.accessPassword = "1513";
         await doc.save();
@@ -260,7 +260,7 @@ app.get('/anilar', async (req, res) => {
     res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bizim Anılarımız</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         
-        <!-- Bağımsız Arka Plan Müzik Çalar -->
+        <!-- Bağımsız Gizli Arka Plan Müzik Çalar -->
         <audio id="bgMusic" loop>
             <source src="${db.bgMusicUrl}" type="audio/mpeg">
         </audio>
@@ -269,7 +269,7 @@ app.get('/anilar', async (req, res) => {
             <div class="top-buttons">
                 <button class="icon-btn" onclick="toggleTheme()" title="Gece/Gündüz Modu">🌓</button>
                 <button class="icon-btn" onclick="toggleMusic()" id="musicBtn" title="Müzik Aç/Kapat">🎵</button>
-                <button class="icon-btn" onclick="toggleModal('musicSettingsModal', true)" title="Müzik Değiştir">⚙️</button>
+                <button class="icon-btn" onclick="toggleModal('musicSettingsModal', true)" title="Müzik Dosyası Yükle">⚙️</button>
                 <button class="icon-btn" onclick="toggleModal('memoryModal', true)" title="Yeni Anı Ekle">➕</button>
                 <button class="icon-btn" onclick="toggleModal('bucketModal', true)" title="Bucket List">🎯</button>
             </div>
@@ -277,17 +277,17 @@ app.get('/anilar', async (req, res) => {
             <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Gözlerin aklıma geldiğinde kalbim gülümsüyor...</p>
         </div>
 
-        <!-- Kolay Müzik Değiştirme Modalı -->
+        <!-- Arka Plan Müzik Dosyası Yükleme Modalı (Ana galeriyi asla kirletmez!) -->
         <div id="musicSettingsModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--rose); margin:0;">🎶 Arka Plan Müziğini Değiştir</h3>
+                    <h3 style="color:var(--rose); margin:0;">🎶 Arka Plan Şarkısını Değiştir</h3>
                     <button onclick="toggleModal('musicSettingsModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
-                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">İstediğin şarkının direkt ses dosyası bağlantısını (URL) buraya yapıştırabilirsin:</p>
-                <form action="/muzik-guncelle" method="POST" style="margin:0;">
-                    <input type="text" name="bgMusicUrl" value="${db.bgMusicUrl}" placeholder="https://..." required>
-                    <button type="submit" class="btn-main" style="padding:12px; font-size:14px; margin-top:5px;">Müziği Kaydet ve Değiştir ✨</button>
+                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Telefonundan veya bilgisayarından direkt bir müzik dosyası (`.mp3`) seçerek arka plan müziğini güncelleyebilirsin:</p>
+                <form action="/muzik-yukle" method="POST" enctype="multipart/form-data" style="margin:0;">
+                    <input type="file" name="musicFile" accept="audio/*" required style="background:var(--card-bg); padding:8px; margin-bottom:14px;">
+                    <button type="submit" class="btn-main" style="padding:12px; font-size:14px;">Şarkıyı Arka Plana Yükle ✨</button>
                 </form>
             </div>
         </div>
@@ -471,12 +471,19 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
     res.redirect('/anilar');
 });
 
-// Arka Plan Müziğini Güncelleme Rotası
-app.post('/muzik-guncelle', async (req, res) => {
+// Arka Plan Müzik Dosyasını Gizli Yükleme Rotası
+app.post('/muzik-yukle', upload.single('musicFile'), async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
-    db.bgMusicUrl = req.body.bgMusicUrl;
-    await db.save();
+    if (req.file && req.file.buffer.length > 0) {
+        try {
+            const musicUrl = await uploadToDrive(req.file);
+            db.bgMusicUrl = musicUrl;
+            await db.save();
+        } catch (err) {
+            console.error("Müzik yükleme hatası:", err);
+        }
+    }
     res.redirect('/anilar');
 });
 
@@ -513,4 +520,4 @@ app.get('/cikis', (req, res) => {
     res.redirect('/');
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Kolay Müzik Sürümü Çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Gizli Müzik Sürümü Çalışıyor: http://localhost:${PORT}`));
