@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - KARARLI VE HATASIZ SÜRÜM
+// BİZİM ANI DEFTERİMİZ - RENDER UYUMLU TAM SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -25,7 +25,7 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('❤️ Romantik Anı Defteri Kararlı Sürüm Bağlandı!'))
+    .then(() => console.log('❤️ Romantik Anı Defteri Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const GOOGLE_FOLDER_ID = "1KIwGp39OyIZpdsL7rlQ72LCmDYLAMqAF";
@@ -33,7 +33,7 @@ const credentials = {
   "type": "service_account",
   "project_id": "woven-plane-506911-m8",
   "private_key_id": "8044520d001b5a5997aecfe45ec07da24a61b5a5",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqwOSrubTVKk27\nu+N0DAx8os9WpQWmhHo3ikluRJWPb1sG/g5ESi75aY/9idLlFAca1JNMOQh0iqYd\nlI8mlTzO18F0gGaisAQREn2fIb/MuH/WoT3lJSc9f3/fpE8PrlmLqCwDz/j3kSkT\n4Lf7OJnTO6Xrb1MooPiDDvwMQgqIzjSwgJ2CGJkBRLgpYTrxYYibxyR2RY6hbk92\nd7r99mJIFAPklQ4thgJoCNT36hvo+/K5iTKIurUB9cFLMayOgy5bF+Brdn2snziF\nLOQuxgGf0Wwto0ggHty+9XTg5xWcks+kISLsrNZ/obiGx8eav/HhICsX81kYUTzz\nHDV2dzNNAgMBAAECggEAKU8MkyHUZlx7XT89bcnrbGyb0eeO2CPFCHI3RQqpDv/+\nytCEBY/X0OVxnQHuiBZiCKLkNqS2j7EqMk5KGmiwww6NweA9VD7WYQXy56BLzRxW\nawdrmKe2GEnj1ugia1X/2ko3Sb3Sypuuzx0GjWt6RVCxGWW/fb0Bmf0yS0nf0AwD\nW//I+G5vMPknjPT7QIPyEjt6YGCGoox7lYLSD8tCmLa+4lR7xaYqwDLH2TLDJ+jf\nqPiIzrb55lgegv/aCiLDHYFsU4yeZIh9x5TvFXiTlG/7xeT+qerD6kTU1ljqkgoc\n4AxTGgQvlxJ2KQTILE8GVxFIXaUVP8StnoSeX3UrkQKBgQDhw8nPfsSAOGA83lXd\naguDieQzZKCfEYBsj2QigZaV16iw0DzBjBNj/3p1hWbXT5Yef0l+y+sKuwmSWxQp\nln+h9va3fIf7luEBXv7bESlZGkGa3ZGvdpPSPqV75ZeEEWV+xiE1yr7xwwCNysYi\nhxXJpBey4M94FJD/p1FmCO21PQKBgQDBnxMwGZie9MwsLFAaHNmkK96c1aUpYcW4\NhAoxyTSKNPttsw8+4Or0wnN+60aIYRaXiXKWMhXQAxBvy5lcOHd2ri00t6rVkVK\7Gl372sDykCaZ30zQ19semYVZ6RnbAb9RAK1i+UG/d51qr4c2canS1tuimzPjOzm\DpSrIx/3UQKBgQCp2RuGIJADCubURE0DE9nvrxjg1U7F/WvJwKMMFsRMnP/Lbg6X\naiPYcocVzTQOvlBpR0fqvc1puEc+NYlYtGH3Xw5EAstnKx7CYk6IT0P1RfyfXxxQ\njnwti3YCXTt9X30lQDgR+SNoTVWoVypzJX/twKcXq2xKoeZof9+MTSFQ3QKBgQCy\nXvDXVA1FCvH5E82rcL6TvpJzW2KvT9JNVQjn+CYUseYjTU60M2Tm6yFSMLQUqaH7\nelZIJihSML/Z5d1BOI/ryS517vmRUIW/czHqepbUxANl+0bc7gk/rzbSK0vKtztt\ILV6OGmCWmgRcH15qKqYvhR6Lm31erdXbUFKs64kMQKBgBYIWnNfEnnA4pi8w0Yt\JSfkl7jjyaLxF2vt0ZeE+4aTEmMMw8Mh5tIgqKNBurq9CWxqJBJM4w2OD0MGDfVq\nlATOW/kXxZcDi4eidDT/nES3XyQnrYLSt2VdH1NRQu3RdG51rE+/O9F0jiF+JoMA\ZkOIsXqAReUoz0CcDalZnLHx\n-----END PRIVATE KEY-----\n",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqwOSrubTVKk27\nu+N0DAx8os9WpQWmhHo3ikluRJWPb1sG/g5ESi75aY/9idLlFAca1JNMOQh0iqYd\nlI8mlTzO18F0gGaisAQREn2fIb/MuH/WoT3lJSc9f3/fpE8PrlmLqCwDz/j3kSkT\n4Lf7OJnTO6Xrb1MooPiDDvwMQgqIzjSwgJ2CGJkBRLgpYTrxYYibxyR2RY6hbk92\nd7r99mJIFAPklQ4thgJoCNT36hvo+/K5iTKIurUB9cFLMayOgy5bF+Brdn2snziF\nLOQuxgGf0Wwto0ggHty+9XTg5xWcks+kISLsrNZ/obiGx8eav/HhICsX81kYUTzz\nHDV2dzNNAgMBAAECggEAKU8MkyHUZlx7XT89bcnrbGyb0eeO2CPFCHI3RQqpDv/+\nytCEBY/X0OVxnQHuiBZiCKLkNqS2j7EqMk5KGmiwww6NweA9VD7WYQXy56BLzRxW\nawdrmKe2GEnj1ugia1X/2ko3Sb3Sypuuzx0GjWt6RVCxGWW/fb0Bmf0yS0nf0AwD\nW//I+G5vMPknjPT7QIPyEjt6YGCGoox7lYLSD8tCmLa+4lR7xaYqwDLH2TLDJ+jf\nqPiIzrb55lgegv/aCiLDHYFsU4yeZIh9x5TvFXiTlG/7xeT+qerD6kTU1ljqkgoc\n4AxTGgQvlxJ2KQTILE8GVxFIXaUVP8StnoSeX3UrkQKBgQDhw8nPfsSAOGA83lXd\>aguDieQzZKCfEYBsj2QigZaV16iw0DzBjBNj/3p1hWbXT5Yef0l+y+sKuwmSWxQp\nln+h9va3fIf7luEBXv7bESlZGkGa3ZGvdpPSPqV75ZeEEWV+xiE1yr7xwwCNysYi\nhxXJpBey4M94FJD/p1FmCO21PQKBgQDBnxMwGZie9MwsLFAaHNmkK96c1aUpYcW4\NhAoxyTSKNPttsw8+4Or0wnN+60aIYRaXiXKWMhXQAxBvy5lcOHd2ri00t6rVkVK\7Gl372sDykCaZ30zQ19semYVZ6RnbAb9RAK1i+UG/d51qr4c2canS1tuimzPjOzm\DpSrIx/3UQKBgQCp2RuGIJADCubURE0DE9nvrxjg1U7F/WvJwKMMFsRMnP/Lbg6X\naiPYcocVzTQOvlBpR0fqvc1puEc+NYlYtGH3Xw5EAstnKx7CYk6IT0P1RfyfXxxQ\njnwti3YCXTt9X30lQDgR+SNoTVWoVypzJX/twKcXq2xKoeZof9+MTSFQ3QKBgQCy\nXvDXVA1FCvH5E82rcL6TvpJzW2KvT9JNVQjn+CYUseYjTU60M2Tm6yFSMLQUqaH7\nelZIJihSML/Z5d1BOI/ryS517vmRUIW/czHqepbUxANl+0bc7gk/rzbSK0vKtztt\ILV6OGmCWmgRcH15qKqYvhR6Lm31erdXbUFKs64kMQKBgBYIWnNfEnnA4pi8w0Yt\nJSfkl7jjyaLxF2vt0ZeE+4aTEmMMw8Mh5tIgqKNBurq9CWxqJBJM4w2OD0MGDfVq\nlATOW/kXxZcDi4eidDT/nES3XyQnrYLSt2VdH1NRQu3RdG51rE+/O9F0jiF+JoMA\ZkOIsXqAReUoz0CcDalZnLHx\n-----END PRIVATE KEY-----\n",
   "client_email": "an-defteri@woven-plane-506911-m8.iam.gserviceaccount.com",
   "client_id": "107057228797529025368",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -515,4 +515,6 @@ app.get('/cikis', (req, res) => {
     res.redirect('/');
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, () => {
+    console.log(`❤️ Romantik Anı Defteri port ${PORT} üzerinde çalışıyor!`);
+});
