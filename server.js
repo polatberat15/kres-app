@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - GİZLİ SES YÜKLEME SÜRÜMÜ
+// BİZİM ANI DEFTERİMİZ - KARARLI VE HATASIZ SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -12,20 +12,20 @@ const stream = require('stream');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
-app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.static(__dirname));
 
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 50 * 1024 * 1024 }
+    limits: { fileSize: 30 * 1024 * 1024 }
 });
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('❤️ Romantik Anı Defteri Gizli Müzik Sürümü Bağlandı!'))
+    .then(() => console.log('❤️ Romantik Anı Defteri Kararlı Sürüm Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const GOOGLE_FOLDER_ID = "1KIwGp39OyIZpdsL7rlQ72LCmDYLAMqAF";
@@ -260,7 +260,6 @@ app.get('/anilar', async (req, res) => {
     res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bizim Anılarımız</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         
-        <!-- Bağımsız Gizli Arka Plan Müzik Çalar -->
         <audio id="bgMusic" loop>
             <source src="${db.bgMusicUrl}" type="audio/mpeg">
         </audio>
@@ -277,7 +276,6 @@ app.get('/anilar', async (req, res) => {
             <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Gözlerin aklıma geldiğinde kalbim gülümsüyor...</p>
         </div>
 
-        <!-- Arka Plan Müzik Dosyası Yükleme Modalı (Ana galeriyi asla kirletmez!) -->
         <div id="musicSettingsModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -292,7 +290,6 @@ app.get('/anilar', async (req, res) => {
             </div>
         </div>
 
-        <!-- Yeni Anı Modalı -->
         <div id="memoryModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -322,7 +319,6 @@ app.get('/anilar', async (req, res) => {
             </div>
         </div>
 
-        <!-- Bucket List (Yapılacaklar) Modalı -->
         <div id="bucketModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -471,7 +467,6 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
     res.redirect('/anilar');
 });
 
-// Arka Plan Müzik Dosyasını Gizli Yükleme Rotası
 app.post('/muzik-yukle', upload.single('musicFile'), async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -520,4 +515,4 @@ app.get('/cikis', (req, res) => {
     res.redirect('/');
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Gizli Müzik Sürümü Çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`❤️ Romantik Anı Defteri Çalışıyor: http://localhost:${PORT}`));
