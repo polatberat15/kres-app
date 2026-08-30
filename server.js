@@ -358,6 +358,27 @@ app.get('/anilar', async (req, res) => {
 
             const bgMusic = document.getElementById('bgMusic');
             let isPlaying = false;
+
+            // Sayfa yüklendiğinde otomatik çalmayı dener, tarayıcı engellerse ekrana ilk dokunuşta/tıklamada müziği başlatır
+            window.addEventListener('DOMContentLoaded', () => {
+                bgMusic.volume = 0.6;
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    document.getElementById('musicBtn').textContent = "🔇";
+                }).catch(e => {
+                    const unlockAudio = () => {
+                        bgMusic.play().then(() => {
+                            isPlaying = true;
+                            document.getElementById('musicBtn').textContent = "🔇";
+                            window.removeEventListener('click', unlockAudio);
+                            window.removeEventListener('touchstart', unlockAudio);
+                        }).catch(err => console.log("Müzik çalma hatası:", err));
+                    };
+                    window.addEventListener('click', unlockAudio);
+                    window.addEventListener('touchstart', unlockAudio);
+                });
+            });
+
             function toggleMusic() {
                 const musicBtn = document.getElementById('musicBtn');
                 if (isPlaying) {
@@ -365,9 +386,10 @@ app.get('/anilar', async (req, res) => {
                     musicBtn.textContent = "🎵";
                     isPlaying = false;
                 } else {
-                    bgMusic.play().catch(e => console.log("Oynatma izni bekleniyor"));
-                    musicBtn.textContent = "🔇";
-                    isPlaying = true;
+                    bgMusic.play().then(() => {
+                        musicBtn.textContent = "🔇";
+                        isPlaying = true;
+                    });
                 }
             }
 
@@ -467,13 +489,15 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
     res.redirect('/anilar');
 });
 
+// Müziklerin bozulmadan doğrudan Base64 olarak kaydedilip anında çalmasını sağlayan güncel rota
 app.post('/muzik-yukle', upload.single('musicFile'), async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
     if (req.file && req.file.buffer.length > 0) {
         try {
-            const musicUrl = await uploadToDrive(req.file);
-            db.bgMusicUrl = musicUrl;
+            const b64 = Buffer.from(req.file.buffer).toString('base64');
+            db.bgMusicUrl = `data:${req.file.mimetype};base64,${b64}`;
+            db.markModified('bgMusicUrl');
             await db.save();
         } catch (err) {
             console.error("Müzik yükleme hatası:", err);
