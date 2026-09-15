@@ -99,7 +99,7 @@ async function getDB() {
     let doc = await MemoryModel.findOne();
     if (!doc) {
         doc = await MemoryModel.create({ 
-            accessPassword: "1513", 
+            accessPassword: "1234", 
             gallery: [], 
             bucketList: [], 
             bgMusicUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3",
