@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANI DEFTERİMİZ - %100 ÇÖZÜLMÜŞ TAM SÜRÜM (ÇOKLU KONUM ENTEGRASYONLU)
+// BİZİM ALANIMIZ - SADE, ŞIK VE DOZUNDA ARKADAŞ SÜRÜMÜ (ŞİFRE: 1234)
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -25,7 +25,7 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://polatberat15_db_user:BURAYA_SIFRENİ_YAZ@cluster0.tuqm6tr.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('❤️ Romantik Anı Defteri Bağlandı!'))
+    .then(() => console.log('✨ Ortak Alan Veritabanına Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const GOOGLE_FOLDER_ID = "1KIwGp39OyIZpdsL7rlQ72LCmDYLAMqAF";
@@ -33,7 +33,7 @@ const credentials = {
   "type": "service_account",
   "project_id": "woven-plane-506911-m8",
   "private_key_id": "8044520d001b5a5997aecfe45ec07da24a61b5a5",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqwOSrubTVKk27\nu+N0DAx8os9WpQWmhHo3ikluRJWPb1sG/g5ESi75aY/9idLlFAca1JNMOQh0iqYd\nlI8mlTzO18F0gGaisAQREn2fIb/MuH/WoT3lJSc9f3/fpE8PrlmLqCwDz/j3kSkT\n4Lf7OJnTO6Xrb1MooPiDDvwMQgqIzjSwgJ2CGJkBRLgpYTrxYYibxyR2RY6hbk92\nd7r99mJIFAPklQ4thgJoCNT36hvo+/K5iTKIurUB9cFLMayOgy5bF+Brdn2snziF\nLOQuxgGf0Wwto0ggHty+9XTg5xWcks+kISLsrNZ/obiGx8eav/HhICsX81kYUTzz\nHDV2dzNNAgMBAAECggEAKU8MkyHUZlx7XT89bcnrbGyb0eeO2CPFCHI3RQqpDv/+\nytCEBY/X0OVxnQHuiBZiCKLkNqS2j7EqMk5KGmiwww6NweA9VD7WYQXy56BLzRxW\awdrmKe2GEnj1ugia1X/2ko3Sb3Sypuuzx0GjWt6RVCxGWW/fb0Bmf0yS0nf0AwD\nW//I+G5vMPknjPT7QIPyEjt6YGCGoox7lYLSD8tCmLa+4lR7xaYqwDLH2TLDJ+jf\nqPiIzrb55lgegv/aCiLDHYFsU4yeZIh9x5TvFXiTlG/7xeT+qerD6kTU1ljqkgoc\n4AxTGgQvlxJ2KQTILE8GVxFIXaUVP8StnoSeX3UrkQKBgQDhw8nPfsSAOGA83lXd\naguDieQzZKCfEYBsj2QigZaV16iw0DzBjBNj/3p1hWbXT5Yef0l+y+sKuwmSWxQp\ln+h9va3fIf7luEBXv7bESlZGkGa3ZGvdpPSPqV75ZeEEWV+xiE1yr7xwwCNysYi\nhxXJpBey4M94FJD/p1FmCO21PQKBgQDBnxMwGZie9MwsLFAaHNmkK96c1aUpYcW4\NhAoxyTSKNPttsw8+4Or0wnN+60aIYRaXiXKWMhXQAxBvy5lcOHd2ri00t6rVkVK\n7Gl372sDykCaZ30zQ19semYVZ6RnbAb9RAK1i+UG/d51qr4c2canS1tuimzPjOzm\nDpSrIx/3UQKBgQCp2RuGIJADCubURE0DE9nvrxjg1U7F/WvJwKMMFsRMnP/Lbg6X\naiPYcocVzTQOvlBpR0fqvc1puEc+NYlYtGH3Xw5EAstnKx7CYk6IT0P1RfyfXxxQ\njnwti3YCXTt9X30lQDgR+SNoTVWoVypzJX/twKcXq2xKoeZof9+MTSFQ3QKBgQCy\nXvDXVA1FCvH5E82rcL6TvpJzW2KvT9JNVQjn+CYUseYjTU60M2Tm6yFSMLQUqaH7\nelZIJihSML/Z5d1BOI/ryS517vmRUIW/czHqepbUxANl+0bc7gk/rzbSK0vKtztt\ILV6OGmCWmgRcH15qKqYvhR6Lm31erdXbUFKs64kMQKBgBYIWnNfEnnA4pi8w0Yt\nJSfkl7jjyaLxF2vt0ZeE+4aTEmMMw8Mh5tIgqKNBurq9CWxqJBJM4w2OD0MGDfVq\nlATOW/kXxZcDi4eidDT/nES3XyQnrYLSt2VdH1NRQu3RdG51rE+/O9F0jiF+JoMA\ZkOIsXqAReUoz0CcDalZnLHx\n-----END PRIVATE KEY-----\n",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCqwOSrubTVKk27\nu+N0DAx8os9WpQWmhHo3ikluRJWPb1sG/g5ESi75aY/9idLlFAca1JNMOQh0iqYd\nlI8mlTzO18F0gGaisAQREn2fIb/MuH/WoT3lJSc9f3/fpE8PrlmLqCwDz/j3kSkT\n4Lf7OJnTO6Xrb1MooPiDDvwMQgqIzjSwgJ2CGJkBRLgpYTrxYYibxyR2RY6hbk92\nd7r99mJIFAPklQ4thgJoCNT36hvo+/K5iTKIurUB9cFLMayOgy5bF+Brdn2snziF\nLOQuxgGf0Wwto0ggHty+9XTg5xWcks+kISLsrNZ/obiGx8eav/HhICsX81kYUTzz\nHDV2dzNNAgMBAAECggEAKU8MkyHUZlx7XT89bcnrbGyb0eeO2CPFCHI3RQqpDv/+\nytCEBY/X0OVxnQHuiBZiCKLkNqS2j7EqMk5KGmiwww6NweA9VD7WYQXy56BLzRxW\awdrmKe2GEnj1ugia1X/2ko3Sb3Sypuuzx0GjWt6RVCxGWW/fb0Bmf0yS0nf0AwD\nW//I+G5vMPknjPT7QIPyEjt6YGCGoox7lYLSD8tCmLa+4lR7xaYqwDLH2TLDJ+jf\nqPiIzrb55lgegv/aCiLDHYFsU4yeZIh9x5TvFXiTlG/7xeT+qerD6kTU1ljqkgoc\n4AxTGgQvlxJ2KQTILE8GVxFIXaUVP8StnoSeX3UrkQKBgQDhw8nPfsSAOGA83lXd\naguDieQzZKCfEYBsj2QigZaV16iw0DzBjBNj/3p1hWbXT5Yef0l+y+sKuwmSWxQp\ln+h9va3fIf7luEBXv7bESlZGkGa3ZGvdpPSPqV75ZeEEWV+xiE1yr7xwwCNysYi\nhxXJpBey4M94FJD/p1FmCO21PQKBgQDBnxMwGZie9MwsLFAaHNmkK96c1aUpYcW4\NhAoxyTSKNPttsw8+4Or0wnN+60aIYRaXiXKWMhXQAxBvy5lcOHd2ri00t6rVkVK\7Gl372sDykCaZ30zQ19semYVZ6RnbAb9RAK1i+UG/d51qr4c2canS1tuimzPjOzm\nDpSrIx/3UQKBgQCp2RuGIJADCubURE0DE9nvrxjg1U7F/WvJwKMMFsRMnP/Lbg6X\naiPYcocVzTQOvlBpR0fqvc1puEc+NYlYtGH3Xw5EAstnKx7CYk6IT0P1RfyfXxxQ\njnwti3YCXTt9X30lQDgR+SNoTVWoVypzJX/twKcXq2xKoeZof9+MTSFQ3QKBgQCy\nXvDXVA1FCvH5E82rcL6TvpJzW2KvT9JNVQjn+CYUseYjTU60M2Tm6yFSMLQUqaH7\nelZIJihSML/Z5d1BOI/ryS517vmRUIW/czHqepbUxANl+0bc7gk/rzbSK0vKtztt\ILV6OGmCWmgRcH15qKqYvhR6Lm31erdXbUFKs64kMQKBgBYIWnNfEnnA4pi8w0Yt\JSfkl7jjyaLxF2vt0ZeE+4aTEmMMw8Mh5tIgqKNBurq9CWxqJBJM4w2OD0MGDfVq\nlATOW/kXxZcDi4eidDT/nES3XyQnrYLSt2VdH1NRQu3RdG51rE+/O9F0jiF+JoMA\ZkOIsXqAReUoz0CcDalZnLHx\n-----END PRIVATE KEY-----\n",
   "client_email": "an-defteri@woven-plane-506911-m8.iam.gserviceaccount.com",
   "client_id": "107057228797529025368",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -80,20 +80,20 @@ async function uploadToDrive(fileObject) {
 }
 
 const MemorySchema = new mongoose.Schema({
-    accessPassword: { type: String, default: "1513" },
+    accessPassword: { type: String, default: "1234" },
     gallery: { type: Array, default: [] },
     bucketList: { type: Array, default: [
-        { id: '1', text: 'Birlikte gün batımını izlemek 🌅', completed: false },
-        { id: '2', text: 'En sevdiğimiz şarkıyla dans etmek 🎶', completed: false },
-        { id: '3', text: 'Birlikte kahve içip saatlerce konuşmak ☕', completed: false }
+        { id: '1', text: 'Güzel bir mekanda kahve içmek ☕', completed: false },
+        { id: '2', text: 'Ortak bir müzik listesi yapmak 🎶', completed: false },
+        { id: '3', text: 'Keyifli vakit geçirmek ✨', completed: false }
     ]},
     bgMusicUrl: { type: String, default: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3" },
     specialLocations: { type: Array, default: [
-        { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Gözlerinle ilk kez göz göze geldiğim o sihirli köşe...' }
+        { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Güzel bir sohbete başladığımız o ilk köşe...' }
     ]}
 });
 
-const MemoryModel = mongoose.model('MemoryData', MemorySchema);
+const MemoryModel = mongoose.model('MemoryDataNew', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
@@ -104,25 +104,25 @@ async function getDB() {
             bucketList: [], 
             bgMusicUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3",
             specialLocations: [
-                { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Gözlerinle ilk kez göz göze geldiğim o sihirli köşe...' }
+                { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Güzel bir sohbete başladığımız o ilk köşe...' }
             ]
         });
-    } else if (doc.accessPassword !== "1513") {
-        doc.accessPassword = "1513";
+    } else if (doc.accessPassword !== "1234") {
+        doc.accessPassword = "1234";
         await doc.save();
     }
     if (!Array.isArray(doc.gallery)) doc.gallery = [];
     if (!Array.isArray(doc.bucketList) || doc.bucketList.length === 0) {
         doc.bucketList = [
-            { id: '1', text: 'Birlikte gün batımını izlemek 🌅', completed: false },
-            { id: '2', text: 'En sevdiğimiz şarkıyla dans etmek 🎶', completed: false },
-            { id: '3', text: 'Birlikte kahve içip saatlerce konuşmak ☕', completed: false }
+            { id: '1', text: 'Güzel bir mekanda kahve içmek ☕', completed: false },
+            { id: '2', text: 'Ortak bir müzik listesi yapmak 🎶', completed: false },
+            { id: '3', text: 'Keyifli vakit geçirmek ✨', completed: false }
         ];
         await doc.save();
     }
     if (!Array.isArray(doc.specialLocations)) {
         doc.specialLocations = [
-            { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Gözlerinle ilk kez göz göze geldiğim o sihirli köşe...' }
+            { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Güzel bir sohbete başladığımız o ilk köşe...' }
         ];
         await doc.save();
     }
@@ -132,17 +132,17 @@ async function getDB() {
 const themeStyle = `
 <style>
     :root { 
-        --rose: #e11d48; 
-        --pink: #f43f5e; 
-        --bg: #fff1f2; 
-        --text: #4c0519; 
+        --primary: #4f46e5; 
+        --accent: #06b6d4; 
+        --bg: #f8fafc; 
+        --text: #1e293b; 
         --card-bg: #ffffff;
-        --input-bg: #fff5f5;
-        --border-color: #ffe4e6;
+        --input-bg: #f1f5f9;
+        --border-color: #e2e8f0;
     }
     body.dark-mode {
-        --rose: #fb7185;
-        --pink: #f43f5e;
+        --primary: #818cf8;
+        --accent: #22d3ee;
         --bg: #0f172a;
         --text: #f1f5f9;
         --card-bg: #1e293b;
@@ -161,67 +161,65 @@ const themeStyle = `
         min-height: 100vh;
         transition: background 0.3s, color 0.3s;
     }
+    /* Kalpler yerine şık, minimalist parıltı/yıldız arka plan dokusu */
     body::before {
-        content: "♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕 ♥ 💖 ♡ 💕";
+        content: "✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧";
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
         text-align: justify;
-        color: rgba(225, 29, 72, 0.12);
-        font-size: 26px; line-height: 2.2; letter-spacing: 25px;
+        color: rgba(79, 70, 229, 0.06);
+        font-size: 22px; line-height: 2.2; letter-spacing: 25px;
         pointer-events: none; z-index: 0; overflow: hidden;
     }
     body.dark-mode::before {
-        color: rgba(244, 63, 94, 0.08);
+        color: rgba(129, 140, 248, 0.04);
     }
     .header-card { 
-        background: linear-gradient(135deg, #f43f5e, #fb7185); 
+        background: linear-gradient(135deg, #4f46e5, #06b6d4); 
         color: white; 
         padding: 50px 20px 35px 20px; 
         border-radius: 0 0 35px 35px; 
         text-align: center; 
-        box-shadow: 0 10px 25px rgba(244, 63, 94, 0.25); 
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2); 
         position: relative; z-index: 2; 
     }
     .top-buttons { position: absolute; top: 35px; right: 20px; display: flex; gap: 8px; }
     .icon-btn { background: rgba(255,255,255,0.25); border: none; color: white; font-size: 16px; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.2s; }
     .icon-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
     
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(76, 5, 25, 0.5); z-index: 100; backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
-    .modal-content { background: var(--card-bg); color: var(--text); width: 100%; max-width: 450px; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid var(--border-color); z-index: 101; max-height: 90vh; overflow-y: auto; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; backdrop-filter: blur(4px); justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+    .modal-content { background: var(--card-bg); color: var(--text); width: 100%; max-width: 450px; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border-color); z-index: 101; max-height: 90vh; overflow-y: auto; }
     @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     
     .card { background: var(--card-bg); color: var(--text); padding: 22px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid var(--border-color); position: relative; z-index: 2; }
-    .btn-main { background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 12px 20px; border-radius: 14px; font-weight: bold; cursor: pointer; display: inline-block; text-decoration: none; text-align: center; width: 100%; box-shadow: 0 4px 12px rgba(244,63,94,0.3); transition: 0.2s; }
+    .btn-main { background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white; border: none; padding: 12px 20px; border-radius: 14px; font-weight: bold; cursor: pointer; display: inline-block; text-decoration: none; text-align: center; width: 100%; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: 0.2s; }
     .btn-main:hover { opacity: 0.95; transform: translateY(-1px); }
     
     input, textarea { width: 100%; padding: 12px 15px; margin: 6px 0 14px 0; border: 1px solid var(--border-color); border-radius: 12px; background: var(--input-bg); box-sizing: border-box; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: 0.2s; }
-    input:focus, textarea:focus { border-color: #f43f5e; box-shadow: 0 0 0 3px rgba(244,63,94,0.1); }
+    input:focus, textarea:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
     
     .memory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; position: relative; z-index: 2; }
     .memory-card { background: var(--card-bg); color: var(--text); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(0,0,0,0.06); border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
-    .memory-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(244,63,94,0.15); }
+    .memory-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(79,70,229,0.12); }
     
-    .falling-heart { position: fixed; top: -20px; color: #f43f5e; font-size: 20px; user-select: none; pointer-events: none; z-index: 999; animation: fall linear forwards; }
-    @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(360deg); opacity: 0; } }
-
     .bucket-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--input-bg); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color); }
 </style>`;
 
 app.get('/', async (req, res) => {
-    if (req.cookies.memory_auth === 'true') return res.redirect('/anilar');
+    if (req.cookies.memory_auth === 'true') return res.redirect('/notlar');
     
-    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bizim Dünyamız</title>${themeStyle}</head>
+    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Ortak Alan</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         <div class="header-card">
-            <h1 style="margin:0; font-size:30px;">❤️ Sonsuz Hikayemiz</h1>
-            <p style="margin:8px 0 0 0; opacity:0.9; font-size:13px;">Burası sadece ikimizin kalbinin attığı yer...</p>
+            <h1 style="margin:0; font-size:26px;">✨ Ortak Alanımız</h1>
+            <p style="margin:8px 0 0 0; opacity:0.9; font-size:13px;">Güzel anlar ve ortak paylaşımlar için...</p>
         </div>
         <div style="max-width:380px; margin:40px auto; padding:0 20px; position:relative; z-index:2;">
             <form action="/giris" method="POST" class="card" style="text-align:center; padding:30px 20px;">
-                <h3 style="color:var(--rose); margin-top:0;">🔒 Kalbinin Anahtarı</h3>
-                <p style="font-size:13px; opacity:0.8; margin-bottom:18px;">Girmek için özel şifremizi gir sevgilim:</p>
+                <h3 style="color:var(--primary); margin-top:0;">🔐 Erişim Şifresi</h3>
+                <p style="font-size:13px; opacity:0.8; margin-bottom:18px;">Devam etmek için şifreyi girmen yeterli:</p>
                 <input type="password" name="password" placeholder="••••" required style="text-align:center; font-size:24px; letter-spacing:6px;">
-                <button type="submit" class="btn-main" style="margin-top:12px; padding:14px; font-size:16px;">Kapıyı Aç 💕</button>
+                <button type="submit" class="btn-main" style="margin-top:12px; padding:14px; font-size:16px;">Giriş Yap ✨</button>
             </form>
         </div>
     </body></html>`);
@@ -231,13 +229,13 @@ app.post('/giris', async (req, res) => {
     const db = await getDB();
     if (req.body.password === db.accessPassword) {
         res.cookie('memory_auth', 'true', { maxAge: 365 * 24 * 60 * 60 * 1000 });
-        res.redirect('/anilar');
+        res.redirect('/notlar');
     } else {
-        res.send(`<script>alert("Hatalı şifre sevgilim! 😊"); window.location.href="/";</script>`);
+        res.send(`<script>alert("Hatalı şifre!"); window.location.href="/";</script>`);
     }
 });
 
-app.get('/anilar', async (req, res) => {
+app.get('/notlar', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
 
@@ -247,37 +245,37 @@ app.get('/anilar', async (req, res) => {
             if (m.imgUrl.includes('.mp4') || m.imgUrl.includes('video')) {
                 mediaEl = `<video controls width="100%" style="height:260px; object-fit:cover; background:black;"><source src="${m.imgUrl}"></video>`;
             } else if (m.imgUrl.includes('.mp3') || m.imgUrl.includes('audio') || m.imgUrl.includes('webm') || m.imgUrl.includes('wav')) {
-                mediaEl = `<div style="padding:30px 20px; background:linear-gradient(135deg, #ffe4e6, #fecdd3); text-align:center;"><p style="margin:0 0 10px 0; font-weight:bold; color:#e11d48;">🎙️ Sesli Not</p><audio controls width="100%" style="width:100%;"><source src="${m.imgUrl}"></audio></div>`;
+                mediaEl = `<div style="padding:30px 20px; background:var(--input-bg); text-align:center;"><p style="margin:0 0 10px 0; font-weight:bold; color:var(--primary);">🎙️ Sesli Not</p><audio controls width="100%" style="width:100%;"><source src="${m.imgUrl}"></audio></div>`;
             } else {
                 mediaEl = `<img src="${m.imgUrl}" style="width:100%; height:260px; object-fit:cover; display:block;">`;
             }
         } else {
-            mediaEl = `<div style="height:120px; background:linear-gradient(135deg, #ffe4e6, #fecdd3); display:flex; align-items:center; justify-content:center; font-size:36px;">💌</div>`;
+            mediaEl = `<div style="height:100px; background:var(--input-bg); display:flex; align-items:center; justify-content:center; font-size:28px;">📌</div>`;
         }
             
         return `
         <div class="memory-card">
             ${mediaEl}
             <div style="padding:18px; display:flex; flex-direction:column; flex-grow:1;">
-                <span style="font-size:12px; color:#f43f5e; font-weight:bold; margin-bottom:4px;">✨ ${m.date}</span>
+                <span style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">✨ ${m.date}</span>
                 <h3 style="margin:0 0 8px 0; font-size:18px;">${m.title}</h3>
                 <p style="margin:0 0 15px 0; font-size:14px; opacity:0.8; line-height:1.5; flex-grow:1; white-space: pre-wrap;">${m.note || ''}</p>
-                <a href="/sil/${m.id}" onclick="return confirm('Bu güzel anıyı silmek istediğine emin misin?')" style="color:#ef4444; font-size:12px; text-decoration:none; align-self:flex-end; font-weight:bold;">🗑️ Sil</a>
+                <a href="/sil/${m.id}" onclick="return confirm('Bu notu silmek istediğine emin misin?')" style="color:#ef4444; font-size:12px; text-decoration:none; align-self:flex-end; font-weight:bold;">🗑️ Sil</a>
             </div>
         </div>`;
-    }).reverse().join('') || '<p style="text-align:center; opacity:0.8; grid-column: 1/-1; padding:60px; font-size:15px; position:relative; z-index:2;">Henüz buraya bir not veya anı eklemedik. Sağ üstteki menüden ilk tatlı sözümüzü yazalım! 💌</p>';
+    }).reverse().join('') || '<p style="text-align:center; opacity:0.8; grid-column: 1/-1; padding:60px; font-size:15px; position:relative; z-index:2;">Henüz buraya bir not eklemedik. Sağ üstteki menüden ilk paylaşımı yapalım! 📌</p>';
 
     let bucketListHTML = db.bucketList.map(item => `
         <div class="bucket-item">
             <span style="font-size:14px; text-decoration: ${item.completed ? 'line-through' : 'none'}; opacity: ${item.completed ? '0.6' : '1'};">${item.text}</span>
-            <a href="/bucket-toggle/${item.id}" style="text-decoration:none; font-size:18px;" title="Yapıldı olarak işaretle">${item.completed ? '✅' : '⬜'}</a>
+            <a href="/bucket-toggle/${item.id}" style="text-decoration:none; font-size:18px;" title="Tamamlandı olarak işaretle">${item.completed ? '✅' : '⬜'}</a>
         </div>
     `).join('');
 
     let locationsHTML = db.specialLocations.map(loc => `
         <div class="card" style="background: linear-gradient(135deg, var(--card-bg), var(--input-bg)); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 12px;">
             <div style="flex: 1; min-width: 240px;">
-                <span style="font-size: 11px; font-weight: bold; color: var(--rose); text-transform: uppercase; letter-spacing: 1px;">📍 Özel Mekanımız</span>
+                <span style="font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">📍 Özel Nokta</span>
                 <h3 style="margin: 4px 0 6px 0; font-size: 18px;">${loc.title}</h3>
                 <p style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.8; line-height: 1.4;">${loc.note}</p>
                 <a href="/konum-sil/${loc.id}" onclick="return confirm('Bu konumu silmek istediğine emin misin?')" style="color:#ef4444; font-size:11px; text-decoration:none; font-weight:bold;">🗑️ Konumu Sil</a>
@@ -288,7 +286,7 @@ app.get('/anilar', async (req, res) => {
         </div>
     `).join('') || '<p style="text-align:center; opacity:0.8; font-size:13px; padding:10px;">Henüz özel bir konum eklemedik. Sağ üstteki 📍 butonundan ekleyebilirsin!</p>';
 
-    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bizim Anılarımız</title>${themeStyle}</head>
+    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Ortak Alan</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         
         <audio id="bgMusic" loop>
@@ -301,16 +299,16 @@ app.get('/anilar', async (req, res) => {
                 <button class="icon-btn" onclick="toggleMusic()" id="musicBtn" title="Müzik Aç/Kapat">🎵</button>
                 <button class="icon-btn" onclick="toggleModal('locationModal', true)" title="Özel Konum Ekle">📍</button>
                 <button class="icon-btn" onclick="toggleModal('musicSettingsModal', true)" title="Müzik Dosyası Yükle">⚙️</button>
-                <button class="icon-btn" onclick="toggleModal('memoryModal', true)" title="Yeni Anı Ekle">➕</button>
-                <button class="icon-btn" onclick="toggleModal('bucketModal', true)" title="Bucket List">🎯</button>
+                <button class="icon-btn" onclick="toggleModal('memoryModal', true)" title="Yeni Not Ekle">➕</button>
+                <button class="icon-btn" onclick="toggleModal('bucketModal', true)" title="Plan Listesi">🎯</button>
             </div>
-            <h1 style="margin:0; font-size:26px;">💖 Bizim Dünyamız</h1>
-            <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Gözlerin aklıma geldiğinde kalbim gülümsüyor...</p>
+            <h1 style="margin:0; font-size:26px;">✨ Ortak Alanımız</h1>
+            <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Ufak tefek kırgınlıklar geride kaldıysa, kaldığımız yerden devam edelim...</p>
         </div>
 
         <!-- ÖZEL KONUMLAR LİSTESİ -->
         <div style="max-width:900px; margin:25px auto 0 auto; padding:0 15px; position:relative; z-index:2;">
-            <h2 style="margin:0 0 12px 0; font-size:20px;">🗺️ Kalbimizin Attığı Noktalar</h2>
+            <h2 style="margin:0 0 12px 0; font-size:20px;">📍 Özel Noktalarımız</h2>
             ${locationsHTML}
         </div>
 
@@ -318,19 +316,19 @@ app.get('/anilar', async (req, res) => {
         <div id="locationModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--rose); margin:0;">📍 Yeni Özel Konum Ekle</h3>
+                    <h3 style="color:var(--primary); margin:0;">📍 Yeni Konum Ekle</h3>
                     <button onclick="toggleModal('locationModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
-                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Buluştuğunuz, gezdiğiniz veya anınız olan bir yeri harita linkiyle birlikte ekleyin:</p>
+                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Gezdiğiniz veya güzel vakit geçirdiğiniz bir yeri harita linkiyle birlikte ekleyin:</p>
                 <form action="/konum-ekle" method="POST" style="margin:0;">
                     <label style="font-size:12px; font-weight:bold;">Mekan Başlığı</label>
-                    <input type="text" name="title" placeholder="Örn: İlk kahve içtiğimiz kafe" required>
+                    <input type="text" name="title" placeholder="Örn: Gittiğimiz kafe" required>
                     
                     <label style="font-size:12px; font-weight:bold;">Google Maps Konum Linki</label>
                     <input type="text" name="mapsUrl" placeholder="https://maps.google.com/..." required>
                     
-                    <label style="font-size:12px; font-weight:bold;">Anı Notu</label>
-                    <textarea name="note" placeholder="Burada ne olmuştu..." rows="2" required></textarea>
+                    <label style="font-size:12px; font-weight:bold;">Not</label>
+                    <textarea name="note" placeholder="Burayla ilgili küçük bir not..." rows="2" required></textarea>
                     
                     <button type="submit" class="btn-main" style="padding:12px; font-size:14px; margin-top:5px;">Listeye Ekle ✨</button>
                 </form>
@@ -340,13 +338,13 @@ app.get('/anilar', async (req, res) => {
         <div id="musicSettingsModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--rose); margin:0;">🎶 Arka Plan Şarkısını Değiştir</h3>
+                    <h3 style="color:var(--primary); margin:0;">🎶 Arka Plan Şarkısını Değiştir</h3>
                     <button onclick="toggleModal('musicSettingsModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
-                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Telefonundan veya bilgisayarından direkt bir müzik dosyası seçerek arka plan müziğini güncelleyebilirsin:</p>
+                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Cihazından bir müzik dosyası seçerek arka plan müziğini güncelleyebilirsin:</p>
                 <form action="/muzik-yukle" method="POST" enctype="multipart/form-data" style="margin:0;">
                     <input type="file" name="musicFile" accept="audio/*" required style="background:var(--card-bg); padding:8px; margin-bottom:14px;">
-                    <button type="submit" class="btn-main" style="padding:12px; font-size:14px;">Şarkıyı Arka Plana Yükle ✨</button>
+                    <button type="submit" class="btn-main" style="padding:12px; font-size:14px;">Şarkıyı Yükle ✨</button>
                 </form>
             </div>
         </div>
@@ -354,28 +352,28 @@ app.get('/anilar', async (req, res) => {
         <div id="memoryModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--rose); margin:0;">✨ Yeni Anı / Sesli Not</h3>
+                    <h3 style="color:var(--primary); margin:0;">✨ Yeni Not / Sesli Not</h3>
                     <button onclick="toggleModal('memoryModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
                 <form action="/ekle" method="POST" enctype="multipart/form-data" style="margin:0;">
                     <label style="font-size:12px; font-weight:bold;">Başlık</label>
-                    <input type="text" name="title" placeholder="Örn: İlk buluşmamız" required>
+                    <input type="text" name="title" placeholder="Örn: Keyifli bir gün" required>
                     
                     <label style="font-size:12px; font-weight:bold;">Medya Dosyası (Foto, Video, Ses)</label>
                     <input type="file" name="image" id="fileInput" accept="image/*,video/*,audio/*" style="background:var(--card-bg); padding:8px;">
                     
                     <div style="background:var(--input-bg); padding:12px; border-radius:12px; margin-bottom:14px; border:1px dashed var(--border-color); text-align:center;">
                         <p style="margin:0 0 8px 0; font-size:12px; font-weight:bold;">🎙️ Veya Mikrofondan Canlı Ses Kaydet</p>
-                        <button type="button" id="recBtn" style="background:#ef4444; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="toggleRecording()">🔴 Kaydı Başlat</button>
+                        <button type="button" id="recBtn" style="background:#4f46e5; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="toggleRecording()">🔴 Kaydı Başlat</button>
                         <span id="recStatus" style="font-size:12px; opacity:0.7; display:block; margin-top:6px;">Kayıt yapılmadı</span>
                         <audio id="audioPlayback" controls style="width:100%; margin-top:8px; display:none;"></audio>
                     </div>
                     <input type="hidden" name="audioData" id="audioData">
 
-                    <label style="font-size:12px; font-weight:bold;">Tatlı Notun / Hissettiklerin</label>
-                    <textarea name="note" placeholder="Bugün aklımdasın..." rows="3" required></textarea>
+                    <label style="font-size:12px; font-weight:bold;">Notun / Düşüncelerin</label>
+                    <textarea name="note" placeholder="Bugünden kalan güzel bir detay..." rows="3" required></textarea>
                     
-                    <button type="submit" class="btn-main" style="padding:12px; font-size:15px; margin-top:5px;">Kalbime Kaydet 💕</button>
+                    <button type="submit" class="btn-main" style="padding:12px; font-size:15px; margin-top:5px;">Kaydet ✨</button>
                 </form>
             </div>
         </div>
@@ -383,14 +381,14 @@ app.get('/anilar', async (req, res) => {
         <div id="bucketModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--rose); margin:0;">🎯 Birlikte Yapılacaklar</h3>
+                    <h3 style="color:var(--primary); margin:0;">🎯 Yapılacaklar Listesi</h3>
                     <button onclick="toggleModal('bucketModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
                 <div style="margin-bottom:15px; max-height:200px; overflow-y:auto;">
                     ${bucketListHTML}
                 </div>
                 <form action="/bucket-ekle" method="POST" style="margin:0;">
-                    <input type="text" name="text" placeholder="Yeni hayalimiz (Örn: Kamp yapmak)" required>
+                    <input type="text" name="text" placeholder="Yeni bir fikir ekle..." required>
                     <button type="submit" class="btn-main" style="padding:10px; font-size:14px;">Listeye Ekle ✨</button>
                 </form>
             </div>
@@ -398,8 +396,8 @@ app.get('/anilar', async (req, res) => {
 
         <div style="max-width:900px; margin:25px auto; padding:0 15px; position:relative; z-index:2;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-size:20px;">💌 Anı ve Not Defterimiz</h2>
-                <a href="/cikis" style="color:#f43f5e; font-size:12px; text-decoration:none; font-weight:bold;">Güvenli Çıkış</a>
+                <h2 style="margin:0; font-size:20px;">💌 Paylaşımlarımız</h2>
+                <a href="/cikis" style="color:#ef4444; font-size:12px; text-decoration:none; font-weight:bold;">Güvenli Çıkış</a>
             </div>
             
             <div class="memory-grid">
@@ -453,18 +451,6 @@ app.get('/anilar', async (req, res) => {
                 }
             }
 
-            function createFallingHeart() {
-                const heart = document.createElement('div');
-                heart.classList.add('falling-heart');
-                heart.innerHTML = '❤️';
-                heart.style.left = Math.random() * window.innerWidth + 'px';
-                heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                heart.style.fontSize = (Math.random() * 12 + 14) + 'px';
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 5000);
-            }
-            setInterval(createFallingHeart, 600);
-
             let mediaRecorder;
             let audioChunks = [];
             let isRecording = false;
@@ -499,7 +485,7 @@ app.get('/anilar', async (req, res) => {
                         isRecording = true;
                         recBtn.textContent = "⏹️ Kaydı Durdur";
                         recBtn.style.background = "#b91c1c";
-                        recStatus.textContent = "Kayıt yapılıyor... Konuşmaya başla 💕";
+                        recStatus.textContent = "Kayıt yapılıyor...";
                     } catch (err) {
                         alert("Mikrofon izni alınamadı!");
                     }
@@ -507,7 +493,7 @@ app.get('/anilar', async (req, res) => {
                     mediaRecorder.stop();
                     isRecording = false;
                     recBtn.textContent = "🔴 Yeniden Kaydet";
-                    recBtn.style.background = "#ef4444";
+                    recBtn.style.background = "#4f46e5";
                     recStatus.textContent = "Ses kaydı başarıyla alındı! ✨";
                 }
             }
@@ -532,7 +518,7 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
         try {
             imgUrl = await uploadToDrive(req.file);
         } catch (err) {
-            return res.send(`<script>alert("Dosya yüklenirken hata oluştu!"); window.location.href="/anilar";</script>`);
+            return res.send(`<script>alert("Dosya yüklenirken hata oluştu!"); window.location.href="/notlar";</script>`);
         }
     }
 
@@ -546,7 +532,7 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
 
     db.markModified('gallery');
     await db.save();
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
 app.post('/muzik-yukle', upload.single('musicFile'), async (req, res) => {
@@ -562,10 +548,9 @@ app.post('/muzik-yukle', upload.single('musicFile'), async (req, res) => {
             console.error("Müzik yükleme hatası:", err);
         }
     }
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
-// ÇOKLU KONUM EKLEME ROTASI
 app.post('/konum-ekle', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -577,17 +562,16 @@ app.post('/konum-ekle', async (req, res) => {
     });
     db.markModified('specialLocations');
     await db.save();
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
-// ÇOKLU KONUM SİLME ROTASI
 app.get('/konum-sil/:id', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
     db.specialLocations = db.specialLocations.filter(loc => loc.id !== req.params.id);
     db.markModified('specialLocations');
     await db.save();
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
 app.post('/bucket-ekle', async (req, res) => {
@@ -596,7 +580,7 @@ app.post('/bucket-ekle', async (req, res) => {
     db.bucketList.push({ id: Date.now().toString(), text: req.body.text, completed: false });
     db.markModified('bucketList');
     await db.save();
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
 app.get('/bucket-toggle/:id', async (req, res) => {
@@ -606,7 +590,7 @@ app.get('/bucket-toggle/:id', async (req, res) => {
     if (item) item.completed = !item.completed;
     db.markModified('bucketList');
     await db.save();
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
 app.get('/sil/:id', async (req, res) => {
@@ -615,7 +599,7 @@ app.get('/sil/:id', async (req, res) => {
     db.gallery = db.gallery.filter(m => m.id !== req.params.id);
     db.markModified('gallery');
     await db.save();
-    res.redirect('/anilar');
+    res.redirect('/notlar');
 });
 
 app.get('/cikis', (req, res) => {
@@ -624,5 +608,5 @@ app.get('/cikis', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`❤️ Romantik Anı Defteri port ${PORT} üzerinde çalışıyor!`);
+    console.log(`✨ Ortak Alan sunucusu port ${PORT} üzerinde çalışıyor!`);
 });
