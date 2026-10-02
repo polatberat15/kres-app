@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ALANIMIZ - KATEGORİLİ VE ÖZELLEŞTİRİLEBİLİR TAM SÜRÜM (ŞİFRE: 1234)
+// BİZİM ALANIMIZ - HATASIZ DÜZELTİLMİŞ TAM SÜRÜM (ŞİFRE: 1234)
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -93,7 +93,7 @@ const MemorySchema = new mongoose.Schema({
     ]}
 });
 
-const MemoryModel = mongoose.model('MemoryDataV3', MemorySchema);
+const MemoryModel = mongoose.model('MemoryDataV4', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
@@ -254,7 +254,7 @@ app.get('/notlar', async (req, res) => {
             if (m.imgUrl.includes('.mp4') || m.imgUrl.includes('video')) {
                 mediaEl = `<video controls width="100%" style="height:260px; object-fit:cover; background:black;"><source src="${m.imgUrl}"></video>`;
             } else if (m.imgUrl.includes('.mp3') || m.imgUrl.includes('audio') || m.imgUrl.includes('webm') || m.imgUrl.includes('wav')) {
-                mediaEl = `<div style="padding:30px 20px; background:var(--input-bg); text-align:center;"><p style="margin:0 0 10px 0; font-weight:bold; color:var(--primary);">🎙️ Sesli Not</p><audio controls width="100%" style="width:100%;"><source src="${m.imgUrl}"></audio></div>`;
+                mediaEl = `<div style="padding:30px 20px; background:var(--input-bg); text-align:center;"><p style="margin:0 0 10px 0; font-weight:bold; color:var(--primary);">🎙️️ Sesli Not</p><audio controls width="100%" style="width:100%;"><source src="${m.imgUrl}"></audio></div>`;
             } else {
                 mediaEl = `<img src="${m.imgUrl}" style="width:100%; height:260px; object-fit:cover; display:block;">`;
             }
@@ -318,13 +318,11 @@ app.get('/notlar', async (req, res) => {
             <p style="margin:6px 0 0 0; opacity:0.9; font-size:13px;">Ufak tefek kırgınlıklar geride kaldıysa, kaldığımız yerden devam edelim...</p>
         </div>
 
-        <!-- ÖZEL KONUMLAR LİSTESİ -->
         <div style="max-width:900px; margin:25px auto 0 auto; padding:0 15px; position:relative; z-index:2;">
             <h2 style="margin:0 0 12px 0; font-size:20px;">📍 Özel Noktalarımız</h2>
             ${locationsHTML}
         </div>
 
-        <!-- KONUM EKLEME MODALI -->
         <div id="locationModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -418,7 +416,6 @@ app.get('/notlar', async (req, res) => {
                 <a href="/cikis" style="color:#ef4444; font-size:12px; text-decoration:none; font-weight:bold;">Güvenli Çıkış</a>
             </div>
 
-            <!-- KATEGORİ FİLTRELEME SEKMELERİ -->
             <div class="filter-tabs">
                 <button class="filter-btn ${filter === 'Tümü' ? 'active' : ''}" onclick="location.href='/notlar?cat=Tümü'">Tümü</button>
                 <button class="filter-btn ${filter === 'Notlar' ? 'active' : ''}" onclick="location.href='/notlar?cat=Notlar'">📌 Notlar</button>
@@ -593,14 +590,6 @@ app.post('/konum-ekle', async (req, res) => {
     res.redirect('/notlar');
 });
 
-app.get('/konum-sil/:id', async (req.res || req), async (res) => {
-    // Express context fix
-    const response = res.setHeader ? res : req;
-    const request = res.setHeader ? req : res;
-    // Standard handling below
-});
-
-// Güvenli silme yönlendirmeleri
 app.get('/konum-sil/:id', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
