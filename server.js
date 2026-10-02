@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ALANIMIZ - SADE, ŞIK VE DOZUNDA ARKADAŞ SÜRÜMÜ (ŞİFRE: 1234)
+// BİZİM ALANIMIZ - KATEGORİLİ VE ÖZELLEŞTİRİLEBİLİR TAM SÜRÜM (ŞİFRE: 1234)
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -93,7 +93,7 @@ const MemorySchema = new mongoose.Schema({
     ]}
 });
 
-const MemoryModel = mongoose.model('MemoryDataNew', MemorySchema);
+const MemoryModel = mongoose.model('MemoryDataV3', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
@@ -161,7 +161,6 @@ const themeStyle = `
         min-height: 100vh;
         transition: background 0.3s, color 0.3s;
     }
-    /* Kalpler yerine şık, minimalist parıltı/yıldız arka plan dokusu */
     body::before {
         content: "✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧";
         position: absolute;
@@ -195,10 +194,14 @@ const themeStyle = `
     .btn-main { background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white; border: none; padding: 12px 20px; border-radius: 14px; font-weight: bold; cursor: pointer; display: inline-block; text-decoration: none; text-align: center; width: 100%; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: 0.2s; }
     .btn-main:hover { opacity: 0.95; transform: translateY(-1px); }
     
-    input, textarea { width: 100%; padding: 12px 15px; margin: 6px 0 14px 0; border: 1px solid var(--border-color); border-radius: 12px; background: var(--input-bg); box-sizing: border-box; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: 0.2s; }
-    input:focus, textarea:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+    input, textarea, select { width: 100%; padding: 12px 15px; margin: 6px 0 14px 0; border: 1px solid var(--border-color); border-radius: 12px; background: var(--input-bg); box-sizing: border-box; font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: 0.2s; }
+    input:focus, textarea:focus, select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
     
-    .memory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; position: relative; z-index: 2; }
+    .filter-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 15px; }
+    .filter-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text); padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .memory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; position: relative; z-index: 2; }
     .memory-card { background: var(--card-bg); color: var(--text); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(0,0,0,0.06); border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
     .memory-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(79,70,229,0.12); }
     
@@ -238,8 +241,14 @@ app.post('/giris', async (req, res) => {
 app.get('/notlar', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
+    const filter = req.query.cat || 'Tümü';
 
-    let memoriesHTML = db.gallery.map(m => {
+    let filteredGallery = db.gallery;
+    if (filter !== 'Tümü') {
+        filteredGallery = db.gallery.filter(m => m.category === filter);
+    }
+
+    let memoriesHTML = filteredGallery.map(m => {
         let mediaEl = '';
         if (m.imgUrl) {
             if (m.imgUrl.includes('.mp4') || m.imgUrl.includes('video')) {
@@ -257,13 +266,16 @@ app.get('/notlar', async (req, res) => {
         <div class="memory-card">
             ${mediaEl}
             <div style="padding:18px; display:flex; flex-direction:column; flex-grow:1;">
-                <span style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">✨ ${m.date}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-size:12px; color:var(--primary); font-weight:bold;">✨ ${m.date}</span>
+                    <span style="font-size:11px; background:var(--input-bg); padding:2px 8px; border-radius:10px; opacity:0.8;">${m.category || 'Notlar'}</span>
+                </div>
                 <h3 style="margin:0 0 8px 0; font-size:18px;">${m.title}</h3>
                 <p style="margin:0 0 15px 0; font-size:14px; opacity:0.8; line-height:1.5; flex-grow:1; white-space: pre-wrap;">${m.note || ''}</p>
                 <a href="/sil/${m.id}" onclick="return confirm('Bu notu silmek istediğine emin misin?')" style="color:#ef4444; font-size:12px; text-decoration:none; align-self:flex-end; font-weight:bold;">🗑️ Sil</a>
             </div>
         </div>`;
-    }).reverse().join('') || '<p style="text-align:center; opacity:0.8; grid-column: 1/-1; padding:60px; font-size:15px; position:relative; z-index:2;">Henüz buraya bir not eklemedik. Sağ üstteki menüden ilk paylaşımı yapalım! 📌</p>';
+    }).reverse().join('') || '<p style="text-align:center; opacity:0.8; grid-column: 1/-1; padding:60px; font-size:15px; position:relative; z-index:2;">Bu kategoride henüz bir paylaşım yok. Sağ üstteki menüden ekleyebilirsin! 📌</p>';
 
     let bucketListHTML = db.bucketList.map(item => `
         <div class="bucket-item">
@@ -319,7 +331,6 @@ app.get('/notlar', async (req, res) => {
                     <h3 style="color:var(--primary); margin:0;">📍 Yeni Konum Ekle</h3>
                     <button onclick="toggleModal('locationModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
-                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Gezdiğiniz veya güzel vakit geçirdiğiniz bir yeri harita linkiyle birlikte ekleyin:</p>
                 <form action="/konum-ekle" method="POST" style="margin:0;">
                     <label style="font-size:12px; font-weight:bold;">Mekan Başlığı</label>
                     <input type="text" name="title" placeholder="Örn: Gittiğimiz kafe" required>
@@ -338,10 +349,9 @@ app.get('/notlar', async (req, res) => {
         <div id="musicSettingsModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--primary); margin:0;">🎶 Arka Plan Şarkısını Değiştir</h3>
+                    <h3 style="color:var(--primary); margin:0;">🎶 Arka Plan Şarkısı</h3>
                     <button onclick="toggleModal('musicSettingsModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
-                <p style="font-size:13px; opacity:0.8; margin-bottom:15px;">Cihazından bir müzik dosyası seçerek arka plan müziğini güncelleyebilirsin:</p>
                 <form action="/muzik-yukle" method="POST" enctype="multipart/form-data" style="margin:0;">
                     <input type="file" name="musicFile" accept="audio/*" required style="background:var(--card-bg); padding:8px; margin-bottom:14px;">
                     <button type="submit" class="btn-main" style="padding:12px; font-size:14px;">Şarkıyı Yükle ✨</button>
@@ -352,25 +362,33 @@ app.get('/notlar', async (req, res) => {
         <div id="memoryModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="color:var(--primary); margin:0;">✨ Yeni Not / Sesli Not</h3>
+                    <h3 style="color:var(--primary); margin:0;">✨ Yeni Paylaşım</h3>
                     <button onclick="toggleModal('memoryModal', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
                 <form action="/ekle" method="POST" enctype="multipart/form-data" style="margin:0;">
+                    <label style="font-size:12px; font-weight:bold;">Kategori Seç</label>
+                    <select name="category">
+                        <option value="Notlar">📌 Notlar</option>
+                        <option value="Mekanlar">☕ Mekanlar</option>
+                        <option value="Öneriler">💡 Öneriler / Tavsiyeler</option>
+                        <option value="Diğer">✨ Diğer</option>
+                    </select>
+
                     <label style="font-size:12px; font-weight:bold;">Başlık</label>
                     <input type="text" name="title" placeholder="Örn: Keyifli bir gün" required>
                     
-                    <label style="font-size:12px; font-weight:bold;">Medya Dosyası (Foto, Video, Ses)</label>
+                    <label style="font-size:12px; font-weight:bold;">Medya (Foto, Video, Ses)</label>
                     <input type="file" name="image" id="fileInput" accept="image/*,video/*,audio/*" style="background:var(--card-bg); padding:8px;">
                     
                     <div style="background:var(--input-bg); padding:12px; border-radius:12px; margin-bottom:14px; border:1px dashed var(--border-color); text-align:center;">
-                        <p style="margin:0 0 8px 0; font-size:12px; font-weight:bold;">🎙️ Veya Mikrofondan Canlı Ses Kaydet</p>
+                        <p style="margin:0 0 8px 0; font-size:12px; font-weight:bold;">🎙️ Veya Canlı Ses Kaydet</p>
                         <button type="button" id="recBtn" style="background:#4f46e5; color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="toggleRecording()">🔴 Kaydı Başlat</button>
                         <span id="recStatus" style="font-size:12px; opacity:0.7; display:block; margin-top:6px;">Kayıt yapılmadı</span>
                         <audio id="audioPlayback" controls style="width:100%; margin-top:8px; display:none;"></audio>
                     </div>
                     <input type="hidden" name="audioData" id="audioData">
 
-                    <label style="font-size:12px; font-weight:bold;">Notun / Düşüncelerin</label>
+                    <label style="font-size:12px; font-weight:bold;">İçerik / Notun</label>
                     <textarea name="note" placeholder="Bugünden kalan güzel bir detay..." rows="3" required></textarea>
                     
                     <button type="submit" class="btn-main" style="padding:12px; font-size:15px; margin-top:5px;">Kaydet ✨</button>
@@ -398,6 +416,15 @@ app.get('/notlar', async (req, res) => {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0; font-size:20px;">💌 Paylaşımlarımız</h2>
                 <a href="/cikis" style="color:#ef4444; font-size:12px; text-decoration:none; font-weight:bold;">Güvenli Çıkış</a>
+            </div>
+
+            <!-- KATEGORİ FİLTRELEME SEKMELERİ -->
+            <div class="filter-tabs">
+                <button class="filter-btn ${filter === 'Tümü' ? 'active' : ''}" onclick="location.href='/notlar?cat=Tümü'">Tümü</button>
+                <button class="filter-btn ${filter === 'Notlar' ? 'active' : ''}" onclick="location.href='/notlar?cat=Notlar'">📌 Notlar</button>
+                <button class="filter-btn ${filter === 'Mekanlar' ? 'active' : ''}" onclick="location.href='/notlar?cat=Mekanlar'">☕ Mekanlar</button>
+                <button class="filter-btn ${filter === 'Öneriler' ? 'active' : ''}" onclick="location.href='/notlar?cat=Öneriler'">💡 Öneriler</button>
+                <button class="filter-btn ${filter === 'Diğer' ? 'active' : ''}" onclick="location.href='/notlar?cat=Diğer'">✨ Diğer</button>
             </div>
             
             <div class="memory-grid">
@@ -525,6 +552,7 @@ app.post('/ekle', upload.single('image'), async (req, res) => {
     db.gallery.push({
         id: Date.now().toString(),
         title: req.body.title,
+        category: req.body.category || 'Notlar',
         note: req.body.note || '',
         imgUrl: imgUrl,
         date: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -565,6 +593,14 @@ app.post('/konum-ekle', async (req, res) => {
     res.redirect('/notlar');
 });
 
+app.get('/konum-sil/:id', async (req.res || req), async (res) => {
+    // Express context fix
+    const response = res.setHeader ? res : req;
+    const request = res.setHeader ? req : res;
+    // Standard handling below
+});
+
+// Güvenli silme yönlendirmeleri
 app.get('/konum-sil/:id', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
