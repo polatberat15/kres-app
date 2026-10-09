@@ -1,20 +1,17 @@
-{
-  "name": "Albayrak Akademi",
-  "short_name": "Albayrak",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1e3a8a",
-  "icons": [
-    {
-      "src": "/logo.jpeg",
-      "sizes": "192x192",
-      "type": "image/jpeg"
-    },
-    {
-      "src": "/logo.jpeg",
-      "sizes": "512x512",
-      "type": "image/jpeg"
-    }
-  ]
-}
+app.get('/manifest.json', (req, res) => {
+    res.json({
+        "name": "Bizim Anı Defterimiz",
+        "short_name": "AnıDefteri",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#fff0f3",
+        "theme_color": "#ff4d6d",
+        "icons": [
+            {
+                "src": "/logo.svg",
+                "sizes": "512x512",
+                "type": "image/svg+xml"
+            }
+        ]
+    });
+});
