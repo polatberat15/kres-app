@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ALANIMIZ - KATEGORİLİ VE ÖZELLEŞTİRİLEBİLİR TAM SÜRÜM (ŞİFRE: 1234)
+// BİZİM ANILARIMIZ - TAM KAPSAMLI NOSTALJİK & GİZLİ ŞİFRELİ SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -24,7 +24,7 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('✨ Ortak Alan Veritabanına Bağlandı!'))
+    .then(() => console.log('✨ Anı Defteri Veritabanına Başarıyla Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const MemorySchema = new mongoose.Schema({
@@ -37,11 +37,11 @@ const MemorySchema = new mongoose.Schema({
     ]},
     bgMusicUrl: { type: String, default: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3" },
     specialLocations: { type: Array, default: [
-        { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Güzel bir sohbete başladığımız o ilk köşe...' }
+        { id: '1', title: 'İlk Konuştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Her şeyin başladığı o tatlı an...' }
     ]}
 });
 
-const MemoryModel = mongoose.model('MemoryDataV3', MemorySchema);
+const MemoryModel = mongoose.model('MemoryDataFinal', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
@@ -49,15 +49,16 @@ async function getDB() {
         doc = await MemoryModel.create({ 
             accessPassword: "1234", 
             gallery: [], 
-            bucketList: [], 
+            bucketList: [
+                { id: '1', text: 'Güzel bir mekanda kahve içmek ☕', completed: false },
+                { id: '2', text: 'Ortak bir müzik listesi yapmak 🎶', completed: false },
+                { id: '3', text: 'Keyifli vakit geçirmek ✨', completed: false }
+            ], 
             bgMusicUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3?filename=romantic-guitars-112174.mp3",
             specialLocations: [
-                { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Güzel bir sohbete başladığımız o ilk köşe...' }
+                { id: '1', title: 'İlk Konuştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Her şeyin başladığı o tatlı an...' }
             ]
         });
-    } else if (doc.accessPassword !== "1234") {
-        doc.accessPassword = "1234";
-        await doc.save();
     }
     if (!Array.isArray(doc.gallery)) doc.gallery = [];
     if (!Array.isArray(doc.bucketList) || doc.bucketList.length === 0) {
@@ -70,7 +71,7 @@ async function getDB() {
     }
     if (!Array.isArray(doc.specialLocations)) {
         doc.specialLocations = [
-            { id: '1', title: 'İlk Buluştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Güzel bir sohbete başladığımız o ilk köşe...' }
+            { id: '1', title: 'İlk Konuştuğumuz Yer ☕', mapsUrl: 'https://maps.google.com/?q=Istanbul', note: 'Her şeyin başladığı o tatlı an...' }
         ];
         await doc.save();
     }
@@ -82,11 +83,11 @@ const themeStyle = `
     :root { 
         --primary: #ff4d6d; 
         --accent: #ff758c; 
-        --bg: #fff5f7; 
+        --bg: #fff0f3; 
         --text: #4a4a4a; 
         --card-bg: #ffffff;
-        --input-bg: #fff0f3;
-        --border-color: #ffd1dc;
+        --input-bg: #fff5f7;
+        --border-color: #ffccd5;
     }
     body.dark-mode {
         --primary: #ff758c;
@@ -99,7 +100,7 @@ const themeStyle = `
     }
     html, body { height: 100%; margin: 0; padding: 0; }
     body { 
-        font-family: 'Segoe UI', sans-serif; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
         background: var(--bg); 
         background-attachment: fixed;
         padding-bottom: 60px; 
@@ -117,13 +118,13 @@ const themeStyle = `
     }
     .heart {
         position: absolute; bottom: -20px;
-        background-color: rgba(255, 77, 109, 0.4);
+        background-color: rgba(255, 77, 109, 0.45);
         display: inline-block; transform: rotate(-45deg);
         animation: floatUp 6s linear infinite;
     }
     .heart::before, .heart::after {
         content: ""; position: absolute; width: 100%; height: 100%;
-        background-color: rgba(255, 77, 109, 0.4); border-radius: 50%;
+        background-color: rgba(255, 77, 109, 0.45); border-radius: 50%;
     }
     .heart::before { top: -50%; left: 0; }
     .heart::after { top: 0; left: 50%; }
@@ -133,12 +134,12 @@ const themeStyle = `
     }
 
     .header-card { 
-        background: linear-gradient(135deg, #ff9a9e, #ff4d6d); 
+        background: linear-gradient(135deg, #ff9a9e 0%, #ff4d6d 99%); 
         color: white; 
         padding: 50px 20px 35px 20px; 
         border-radius: 0 0 35px 35px; 
         text-align: center; 
-        box-shadow: 0 10px 25px rgba(255, 77, 109, 0.2); 
+        box-shadow: 0 10px 25px rgba(255, 77, 109, 0.25); 
         position: relative; z-index: 2; 
     }
     .top-buttons { position: absolute; top: 35px; right: 20px; display: flex; gap: 8px; }
@@ -166,10 +167,11 @@ const themeStyle = `
     
     .bucket-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--input-bg); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color); }
     
-    /* Gizli Şifre Değiştirme Tetikleyicisi (Sağ Alt Köşe) */
-    #secret-trigger { position: fixed; bottom: 5px; right: 5px; width: 25px; height: 25px; cursor: pointer; opacity: 0.05; z-index: 999; }
+    /* Çok Gizli Şifre Değiştirme Tetikleyicisi (Sağ Alt Köşe) */
+    #secret-trigger { position: fixed; bottom: 5px; right: 5px; width: 30px; height: 30px; cursor: pointer; opacity: 0.03; z-index: 999; }
 </style>`;
 
+// Giriş Ekranı
 app.get('/', async (req, res) => {
     if (req.cookies.memory_auth === 'true') return res.redirect('/notlar');
     
@@ -210,7 +212,6 @@ app.get('/', async (req, res) => {
         </div>
 
         <script>
-            // Kayan Kalpler
             function createHeart() {
                 const container = document.getElementById('heartsContainer');
                 const heart = document.createElement('div');
@@ -278,7 +279,6 @@ app.post('/giris', async (req, res) => {
     }
 });
 
-// Gizli Şifre Güncelleme API
 app.post('/api/update-password', async (req, res) => {
     try {
         const { newPassword, masterKey } = req.body;
@@ -297,6 +297,7 @@ app.post('/api/update-password', async (req, res) => {
     }
 });
 
+// Notlar ve Paylaşımlar Ana Sayfası
 app.get('/notlar', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -331,7 +332,7 @@ app.get('/notlar', async (req, res) => {
                 </div>
                 <h3 style="margin:0 0 8px 0; font-size:18px;">${m.title}</h3>
                 <p style="margin:0 0 15px 0; font-size:14px; opacity:0.8; line-height:1.5; flex-grow:1; white-space: pre-wrap;">${m.note || ''}</p>
-                <a href="/sil/${m.id}" onclick="return confirm('Bu notu silmek istediğine emin misin?')" style="color:#ef4444; font-size:12px; text-decoration:none; align-self:flex-end; font-weight:bold;">🗑️ Sil</a>
+                <a href="/sil/${m.id}" onclick="return confirm('Bu notu silmek istediğine emin misin?')" style="color:#ff4d6d; font-size:12px; text-decoration:none; align-self:flex-end; font-weight:bold;">🗑️ Sil</a>
             </div>
         </div>`;
     }).reverse().join('') || '<p style="text-align:center; opacity:0.8; grid-column: 1/-1; padding:60px; font-size:15px; position:relative; z-index:2;">Bu kategoride henüz bir paylaşım yok. Sağ üstteki menüden ekleyebilirsin! 📌</p>';
@@ -349,7 +350,7 @@ app.get('/notlar', async (req, res) => {
                 <span style="font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">📍 Özel Nokta</span>
                 <h3 style="margin: 4px 0 6px 0; font-size: 18px;">${loc.title}</h3>
                 <p style="margin: 0 0 8px 0; font-size: 13px; opacity: 0.8; line-height: 1.4;">${loc.note}</p>
-                <a href="/konum-sil/${loc.id}" onclick="return confirm('Bu konumu silmek istediğine emin misin?')" style="color:#ef4444; font-size:11px; text-decoration:none; font-weight:bold;">🗑️ Konumu Sil</a>
+                <a href="/konum-sil/${loc.id}" onclick="return confirm('Bu konumu silmek istediğine emin misin?')" style="color:#ff4d6d; font-size:11px; text-decoration:none; font-weight:bold;">🗑️ Konumu Sil</a>
             </div>
             <div>
                 <a href="${loc.mapsUrl}" target="_blank" class="btn-main" style="padding: 10px 18px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">🗺️ Haritada Gör</a>
@@ -469,7 +470,7 @@ app.get('/notlar', async (req, res) => {
         <div style="max-width:900px; margin:25px auto; padding:0 15px; position:relative; z-index:2;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0; font-size:20px;">💌 Paylaşımlarımız</h2>
-                <a href="/cikis" style="color:#ef4444; font-size:12px; text-decoration:none; font-weight:bold;">Güvenli Çıkış</a>
+                <a href="/cikis" style="color:#ff4d6d; font-size:12px; text-decoration:none; font-weight:bold;">Güvenli Çıkış</a>
             </div>
 
             <div class="filter-tabs">
@@ -485,8 +486,27 @@ app.get('/notlar', async (req, res) => {
             </div>
         </div>
 
+        <!-- Çok Gizli Tetikleyici ve Yönetim Paneli -->
+        <div id="secret-trigger" onclick="revealSecretPanel()" title="Gizli Alan"></div>
+        <div id="secretPanel" class="modal-overlay">
+            <div class="modal-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="color:var(--primary); margin:0;">🔐 Gizli Şifre Yönetimi</h3>
+                    <button onclick="toggleModal('secretPanel', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
+                </div>
+                <div id="auth-step">
+                    <p style="font-size:12px; color:var(--primary);">Bu alanı açmak için ekstra güvenlik şifresi gerekiyor!</p>
+                    <input type="password" id="masterAdminPass" placeholder="Ekstra Güvenlik Şifresi...">
+                    <button type="button" class="btn-main" onclick="verifyMasterPass()">Doğrula</button>
+                </div>
+                <div id="change-step" style="display:none;">
+                    <input type="password" id="newAppPassword" placeholder="Yeni Defter Şifresi (min 4 karakter)...">
+                    <button type="button" class="btn-main" onclick="updatePassword()">Şifreyi Güncelle</button>
+                </div>
+            </div>
+        </div>
+
         <script>
-            // Kayan Kalpler
             function createHeart() {
                 const container = document.getElementById('heartsContainer');
                 const heart = document.createElement('div');
@@ -502,8 +522,43 @@ app.get('/notlar', async (req, res) => {
             }
             setInterval(createHeart, 400);
 
+            let clickCount = 0;
+            function revealSecretPanel() {
+                clickCount++;
+                if(clickCount >= 3) {
+                    document.getElementById('secretPanel').style.display = 'flex';
+                    clickCount = 0;
+                }
+            }
             function toggleModal(modalId, open) {
                 document.getElementById(modalId).style.display = open ? 'flex' : 'none';
+            }
+            function verifyMasterPass() {
+                const pass = document.getElementById('masterAdminPass').value;
+                if(pass === "ekstraGuvenlik123") {
+                    document.getElementById('auth-step').style.display = 'none';
+                    document.getElementById('change-step').style.display = 'block';
+                } else {
+                    alert("Hatalı güvenlik şifresi!");
+                }
+            }
+            async function updatePassword() {
+                const newPassword = document.getElementById('newAppPassword').value;
+                const masterKey = document.getElementById('masterAdminPass').value;
+                try {
+                    const res = await fetch('/api/update-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newPassword, masterKey })
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+                        alert(data.message);
+                        toggleModal('secretPanel', false);
+                    } else {
+                        alert(data.error || "Hata oluştu.");
+                    }
+                } catch(e) { alert("Bağlantı hatası!"); }
             }
 
             function toggleTheme() {
@@ -597,7 +652,7 @@ app.get('/notlar', async (req, res) => {
     </body></html>`);
 });
 
-// Medya Dosyalarını Base64 / MongoDB İçinde Tutma (Google Drive Bağımlılığı Kaldırıldı)
+// Medya Yükleme ve Veritabanı İşlemleri (Google Drive Kaldırıldı)
 app.post('/ekle', upload.single('image'), async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -697,5 +752,5 @@ app.get('/cikis', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`✨ Ortak Alan sunucusu port ${PORT} üzerinde çalışıyor!`);
+    console.log(`✨ Anı Defteri sunucusu port ${PORT} üzerinde çalışıyor!`);
 });
