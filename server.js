@@ -1,5 +1,5 @@
 // ============================================================================
-// BİZİM ANILARIMIZ - TAM KAPSAMLI NOSTALJİK & GİZLİ ŞİFRELİ SÜRÜM
+// BİZİM ANILARIMIZ - DİNAMİK ŞİFRE GÜNCELLEME VE PWA DESTEKLİ TAM SÜRÜM
 // ============================================================================
 const express = require('express');
 const path = require('path');
@@ -16,6 +16,25 @@ app.use(cookieParser());
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// PWA için Manifest Endpoint'i
+app.get('/manifest.json', (req, res) => {
+    res.json({
+        "name": "Bizim Anı Defterimiz",
+        "short_name": "AnıDefteri",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#fff0f3",
+        "theme_color": "#ff4d6d",
+        "icons": [
+            {
+                "src": "https://cdn-icons-png.flaticon.com/512/2965/2965567.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    });
+});
+
 const upload = multer({ 
     storage: multer.memoryStorage(),
     limits: { fileSize: 30 * 1024 * 1024 }
@@ -24,11 +43,11 @@ const upload = multer({
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('✨ Anı Defteri Veritabanına Başarıyla Bağlandı!'))
+    .then(() => console.log('✨ Anı Defteri Veritabanına Bağlandı!'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 const MemorySchema = new mongoose.Schema({
-    accessPassword: { type: String, default: "1234" },
+    accessPassword: { type: String, default: "123" },
     gallery: { type: Array, default: [] },
     bucketList: { type: Array, default: [
         { id: '1', text: 'Güzel bir mekanda kahve içmek ☕', completed: false },
@@ -41,13 +60,13 @@ const MemorySchema = new mongoose.Schema({
     ]}
 });
 
-const MemoryModel = mongoose.model('MemoryDataFinal', MemorySchema);
+const MemoryModel = mongoose.model('MemoryDataPWA', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
     if (!doc) {
         doc = await MemoryModel.create({ 
-            accessPassword: "1234", 
+            accessPassword: "123", 
             gallery: [], 
             bucketList: [
                 { id: '1', text: 'Güzel bir mekanda kahve içmek ☕', completed: false },
@@ -110,7 +129,6 @@ const themeStyle = `
         min-height: 100vh;
         transition: background 0.3s, color 0.3s;
     }
-    /* Kayan Kalpler Arka Plan Efekti */
     .hearts-container {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -167,7 +185,6 @@ const themeStyle = `
     
     .bucket-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--input-bg); border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color); }
     
-    /* Çok Gizli Şifre Değiştirme Tetikleyicisi (Sağ Alt Köşe) */
     #secret-trigger { position: fixed; bottom: 5px; right: 5px; width: 30px; height: 30px; cursor: pointer; opacity: 0.03; z-index: 999; }
 </style>`;
 
@@ -175,7 +192,7 @@ const themeStyle = `
 app.get('/', async (req, res) => {
     if (req.cookies.memory_auth === 'true') return res.redirect('/notlar');
     
-    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="manifest" href="/public/manifest.json"><title>Bizim Anı Defterimiz ❤️</title>${themeStyle}</head>
+    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#ff4d6d"><title>Bizim Anı Defterimiz ❤️</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         <div class="hearts-container" id="heartsContainer"></div>
         <div class="header-card">
@@ -191,7 +208,6 @@ app.get('/', async (req, res) => {
             </form>
         </div>
 
-        <!-- Çok Gizli Tetikleyici ve Yönetim Paneli -->
         <div id="secret-trigger" onclick="revealSecretPanel()" title="Gizli Alan"></div>
         <div id="secretPanel" class="modal-overlay">
             <div class="modal-content">
@@ -200,12 +216,13 @@ app.get('/', async (req, res) => {
                     <button onclick="toggleModal('secretPanel', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
                 <div id="auth-step">
-                    <p style="font-size:12px; color:var(--primary);">Bu alanı açmak için ekstra güvenlik şifresi gerekiyor!</p>
-                    <input type="password" id="masterAdminPass" placeholder="Ekstra Güvenlik Şifresi...">
+                    <p style="font-size:12px; color:var(--primary);">Güvenlik şifresini gir (123):</p>
+                    <input type="password" id="masterAdminPass" placeholder="Güvenlik Şifresi...">
                     <button type="button" class="btn-main" onclick="verifyMasterPass()">Doğrula</button>
                 </div>
                 <div id="change-step" style="display:none;">
-                    <input type="password" id="newAppPassword" placeholder="Yeni Defter Şifresi (min 4 karakter)...">
+                    <p style="font-size:12px; color:var(--primary);">Defter için yeni şifreni belirle:</p>
+                    <input type="password" id="newAppPassword" placeholder="Yeni Defter Şifresi...">
                     <button type="button" class="btn-main" onclick="updatePassword()">Şifreyi Güncelle</button>
                 </div>
             </div>
@@ -240,7 +257,7 @@ app.get('/', async (req, res) => {
             }
             function verifyMasterPass() {
                 const pass = document.getElementById('masterAdminPass').value;
-                if(pass === "ekstraGuvenlik123") {
+                if(pass === "123") {
                     document.getElementById('auth-step').style.display = 'none';
                     document.getElementById('change-step').style.display = 'block';
                 } else {
@@ -260,6 +277,7 @@ app.get('/', async (req, res) => {
                     if(data.success) {
                         alert(data.message);
                         toggleModal('secretPanel', false);
+                        location.reload();
                     } else {
                         alert(data.error || "Hata oluştu.");
                     }
@@ -279,14 +297,15 @@ app.post('/giris', async (req, res) => {
     }
 });
 
+// Dinamik Şifre Güncelleme API
 app.post('/api/update-password', async (req, res) => {
     try {
         const { newPassword, masterKey } = req.body;
-        if (masterKey !== "ekstraGuvenlik123") {
+        if (masterKey !== "123") {
             return res.status(403).json({ error: "Hatalı yönetici güvenlik şifresi!" });
         }
-        if (!newPassword || newPassword.length < 4) {
-            return res.status(400).json({ error: "Yeni şifre en az 4 karakter olmalıdır." });
+        if (!newPassword || newPassword.length < 1) {
+            return res.status(400).json({ error: "Şifre boş olamaz." });
         }
         const db = await getDB();
         db.accessPassword = newPassword;
@@ -297,7 +316,6 @@ app.post('/api/update-password', async (req, res) => {
     }
 });
 
-// Notlar ve Paylaşımlar Ana Sayfası
 app.get('/notlar', async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
@@ -313,7 +331,7 @@ app.get('/notlar', async (req, res) => {
         if (m.imgUrl) {
             if (m.imgUrl.includes('.mp4') || m.imgUrl.includes('video')) {
                 mediaEl = `<video controls width="100%" style="height:260px; object-fit:cover; background:black;"><source src="${m.imgUrl}"></video>`;
-            } else if (m.imgUrl.includes('.mp3') || m.imgUrl.includes('audio') || m.imgUrl.includes('webm') || m.imgUrl.includes('wav')) {
+            } else if (m.imgUrl.includes('.mp3') || m.imgUrl.includes('audio') || m.imgUrl.includes('webm') || m.imgUrl.includes('wav') || m.imgUrl.includes('data:audio')) {
                 mediaEl = `<div style="padding:30px 20px; background:var(--input-bg); text-align:center;"><p style="margin:0 0 10px 0; font-weight:bold; color:var(--primary);">🎙️ Sesli Not</p><audio controls width="100%"><source src="${m.imgUrl}"></audio></div>`;
             } else {
                 mediaEl = `<img src="${m.imgUrl}" style="width:100%; height:260px; object-fit:cover; display:block;">`;
@@ -358,7 +376,7 @@ app.get('/notlar', async (req, res) => {
         </div>
     `).join('') || '<p style="text-align:center; opacity:0.8; font-size:13px; padding:10px;">Henüz özel bir konum eklemedik. Sağ üstteki 📍 butonundan ekleyebilirsin!</p>';
 
-    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="manifest" href="/public/manifest.json"><title>Bizim Anı Defterimiz ❤️</title>${themeStyle}</head>
+    res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#ff4d6d"><title>Bizim Anı Defterimiz ❤️</title>${themeStyle}</head>
     <body class="${req.cookies.theme === 'dark' ? 'dark-mode' : ''}">
         <div class="hearts-container" id="heartsContainer"></div>
         <audio id="bgMusic" loop>
@@ -383,6 +401,7 @@ app.get('/notlar', async (req, res) => {
             ${locationsHTML}
         </div>
 
+        <!-- KONUM EKLEME MODALI -->
         <div id="locationModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -401,6 +420,7 @@ app.get('/notlar', async (req, res) => {
             </div>
         </div>
 
+        <!-- MÜZİK YÜKLEME MODALI -->
         <div id="musicSettingsModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -414,6 +434,7 @@ app.get('/notlar', async (req, res) => {
             </div>
         </div>
 
+        <!-- YENİ PAYLAŞIM / ANI EKLEME MODALI -->
         <div id="memoryModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -451,6 +472,7 @@ app.get('/notlar', async (req, res) => {
             </div>
         </div>
 
+        <!-- YAPILACAKLAR LİSTESİ MODALI -->
         <div id="bucketModal" class="modal-overlay">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -495,12 +517,13 @@ app.get('/notlar', async (req, res) => {
                     <button onclick="toggleModal('secretPanel', false)" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text); padding:0;">&times;</button>
                 </div>
                 <div id="auth-step">
-                    <p style="font-size:12px; color:var(--primary);">Bu alanı açmak için ekstra güvenlik şifresi gerekiyor!</p>
-                    <input type="password" id="masterAdminPass" placeholder="Ekstra Güvenlik Şifresi...">
+                    <p style="font-size:12px; color:var(--primary);">Güvenlik şifresini gir (123):</p>
+                    <input type="password" id="masterAdminPass" placeholder="Güvenlik Şifresi...">
                     <button type="button" class="btn-main" onclick="verifyMasterPass()">Doğrula</button>
                 </div>
                 <div id="change-step" style="display:none;">
-                    <input type="password" id="newAppPassword" placeholder="Yeni Defter Şifresi (min 4 karakter)...">
+                    <p style="font-size:12px; color:var(--primary);">Defter için yeni şifreni belirle:</p>
+                    <input type="password" id="newAppPassword" placeholder="Yeni Defter Şifresi...">
                     <button type="button" class="btn-main" onclick="updatePassword()">Şifreyi Güncelle</button>
                 </div>
             </div>
@@ -535,7 +558,7 @@ app.get('/notlar', async (req, res) => {
             }
             function verifyMasterPass() {
                 const pass = document.getElementById('masterAdminPass').value;
-                if(pass === "ekstraGuvenlik123") {
+                if(pass === "123") {
                     document.getElementById('auth-step').style.display = 'none';
                     document.getElementById('change-step').style.display = 'block';
                 } else {
@@ -652,7 +675,7 @@ app.get('/notlar', async (req, res) => {
     </body></html>`);
 });
 
-// Medya Yükleme ve Veritabanı İşlemleri (Google Drive Kaldırıldı)
+// Veritabanı ve Medya İşlemleri
 app.post('/ekle', upload.single('image'), async (req, res) => {
     if (req.cookies.memory_auth !== 'true') return res.redirect('/');
     const db = await getDB();
