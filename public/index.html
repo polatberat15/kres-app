@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bizim Anı Defterimiz ❤️</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ff4d6d">
+    
+    <style>
+        :root {
+            --primary-color: #ff4d6d;
+            --bg-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-color: #4a4a4a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hearts-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .heart {
+            position: absolute;
+            bottom: -20px;
+            background-color: rgba(255, 77, 109, 0.6);
+            display: inline-block;
+            transform: rotate(-45deg);
+            animation: floatUp 6s linear infinite;
+        }
+
+        .heart::before, .heart::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 77, 109, 0.6);
+            border-radius: 50%;
+        }
+
+        .heart::before { top: -50%; left: 0; }
+        .heart::after { top: 0; left: 50%; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(-45deg) scale(0.6); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(-45deg) scale(1.2); opacity: 0; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 { color: #d90429; font-family: 'Georgia', serif; }
+        .subtitle { font-style: italic; color: #6c757d; margin-bottom: 30px; }
+
+        .memory-box {
+            text-align: left;
+            background: #fff;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        #secret-trigger {
+            position: fixed;
+            bottom: 5px;
+            right: 5px;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            opacity: 0.05;
+        }
+
+        .hidden-panel {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff0f3;
+            border: 2px dashed var(--primary-color);
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hearts-container" id="heartsContainer"></div>
+
+    <div class="container">
+        <h1>Eski Günlerin Hatırına... ✨</h1>
+        <p class="subtitle">"Bazı hikayeler hiç bitmez, sadece kaldığı yerden sessizce devam eder."</p>
+
+        <div id="memories-list">
+            <div class="memory-box">
+                <strong>Anı 1</strong>
+                <p>O tatlı günler ve sabaha kadar süren sohbetler...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Çok Gizli Tetikleyici (Sağ alt köşe) -->
+    <div id="secret-trigger" onclick="revealSecretPanel()" title="Gizli Alan"></div>
+
+    <!-- Gizli Şifre Değiştirme Paneli (Çift Katmanlı Güvenlik) -->
+    <div class="container hidden-panel" id="secretPanel">
+        <h3>🔐 Gizli Yönetim Paneli</h3>
+        <p style="font-size: 12px; color: #d90429;">Bu alanı açmak için ekstra yönetici şifresi gerekiyor!</p>
+        
+        <div id="auth-step">
+            <input type="password" id="masterAdminPass" placeholder="Ekstra Güvenlik Şifresi...">
+            <button onclick="verifyMasterPass()">Doğrula</button>
+        </div>
+
+        <div id="change-step" style="display:none;">
+            <input type="password" id="newAppPassword" placeholder="Yeni Defter Şifresi...">
+            <button onclick="updatePassword()">Şifreyi Güncelle</button>
+        </div>
+    </div>
+
+    <script>
+        // Kayan Kalpler Efekti
+        function createHeart() {
+            const container = document.getElementById('heartsContainer');
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            const size = Math.random() * 20 + 10;
+            heart.style.width = `${size}px`;
+            heart.style.height = `${size}px`;
+            heart.style.left = `${Math.random() * 100}vw`;
+            const duration = Math.random() * 3 + 4;
+            heart.style.animationDuration = `${duration}s`;
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), duration * 1000);
+        }
+        setInterval(createHeart, 400);
+
+        // Gizli Paneli Açma (Sağ alt köşeye 3 kez tıklama)
+        let clickCount = 0;
+        function revealSecretPanel() {
+            clickCount++;
+            if(clickCount >= 3) {
+                document.getElementById('secretPanel').style.display = 'block';
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                clickCount = 0;
+            }
+        }
+
+        // 1. Kademe Güvenlik Şifresi Kontrolü
+        function verifyMasterPass() {
+            const pass = document.getElementById('masterAdminPass').value;
+            if(pass === "ekstraGuvenlik123") {
+                document.getElementById('auth-step').style.display = 'none';
+                document.getElementById('change-step').style.display = 'block';
+            } else {
+                alert("Hatalı güvenlik şifresi!");
+            }
+        }
+
+        async function updatePassword() {
+            const newPassword = document.getElementById('newAppPassword').value;
+            const masterKey = document.getElementById('masterAdminPass').value;
+            
+            try {
+                const response = await fetch('/api/update-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword, masterKey })
+                });
+                const result = await response.json();
+                if(result.success) {
+                    alert(result.message);
+                    document.getElementById('secretPanel').style.display = 'none';
+                } else {
+                    alert(result.error || "Hata oluştu.");
+                }
+            } catch(err) {
+                alert("Sunucu bağlantı hatası!");
+            }
+        }
+    </script>
+</body>
+</html>
