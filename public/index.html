@@ -68,7 +68,6 @@
         .bucket-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--input-bg); border-radius: 10px; margin-bottom: 6px; border: 1px solid var(--border-color); }
         #secret-trigger { position: fixed; bottom: 5px; right: 5px; width: 35px; height: 35px; cursor: pointer; opacity: 0.03; z-index: 999; }
         
-        /* Mobil Uyumluluk Ayarları */
         @media (max-width: 768px) {
             .header-card { padding: 35px 12px 25px 12px; border-radius: 0 0 24px 24px; }
             .header-card h1 { font-size: 22px !important; }
@@ -179,7 +178,7 @@
         <div class="modal-content">
             <h3 style="font-size:16px; color:var(--primary); margin-top:0;">🔐 Gizli Şifre Yönetimi</h3>
             <div id="auth-step">
-                <input type="password" id="masterAdminPass" placeholder="Güvenlik Şifresi...">
+                <input type="password" id="masterAdminPass" placeholder="Mevcut Şifreniz...">
                 <button type="button" class="btn-main" onclick="verifyMasterPass()">Doğrula</button>
             </div>
             <div id="change-step" style="display:none;">
@@ -204,7 +203,7 @@
             container.appendChild(heart);
             setTimeout(() => heart.remove(), duration * 1000);
         }
-        setInterval(createHeart, 500);
+        setInterval(createHeart, 400);
 
         function toggleModal(id, open) {
             document.getElementById(id).style.display = open ? 'flex' : 'none';
@@ -224,7 +223,7 @@
                 if(data.success) {
                     document.getElementById('auth-step').style.display = 'none';
                     document.getElementById('change-step').style.display = 'block';
-                } else { alert("Hatalı güvenlik şifresi!"); }
+                } else { alert("Hatalı şifre!"); }
             }).catch(() => alert("Bağlantı hatası!"));
         }
         async function updatePassword() {
@@ -232,4 +231,36 @@
             const masterKey = document.getElementById('masterAdminPass').value;
             const res = await fetch('/api/update-password', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON
+                body: JSON.stringify({ newPassword, masterKey })
+            });
+            const data = await res.json();
+            if(data.success) { alert(data.message); location.reload(); } else { alert(data.error); }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            document.cookie = "theme=" + (isDark ? "dark" : "light") + "; max-age=31536000; path=/";
+        }
+
+        let mediaRecorder, audioChunks = [], isRecording = false;
+        async function toggleRecording() {
+            const recBtn = document.getElementById('recBtn'), recStatus = document.getElementById('recStatus'), audioPlayback = document.getElementById('audioPlayback'), audioDataInput = document.getElementById('audioData');
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/webm' }));
+                        reader.onloadend = () => { audioDataInput.value = reader.result; audioPlayback.src = reader.result; audioPlayback.style.display = 'block'; };
+                    };
+                    mediaRecorder.start(); isRecording = true; recBtn.textContent = "⏹️ Durdur";
+                } catch (e) { alert("Mikrofon izni yok!"); }
+            } else {
+                mediaRecorder.stop(); isRecording = false; recBtn.textContent = "🔴 Kaydet"; recStatus.textContent = "Hazır! ✨";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -37,7 +37,7 @@ const MemorySchema = new mongoose.Schema({
     bgMusicUrl: { type: String, default: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf7f6.mp3" },
     specialLocations: { type: Array, default: [] }
 });
-const MemoryModel = mongoose.model('MemoryDataResponsive', MemorySchema);
+const MemoryModel = mongoose.model('MemoryDataFinalV3', MemorySchema);
 
 async function getDB() {
     let doc = await MemoryModel.findOne();
@@ -48,7 +48,7 @@ async function getDB() {
     return doc;
 }
 
-// Şifre Giriş Sayfası
+// Şifre Giriş Sayfası (Kayıtlı şifreyle dinamik doğrulama)
 app.get('/', async (req, res) => {
     if (req.cookies.memory_auth === 'true') return res.redirect('/notlar');
     res.send(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Giriş</title>
@@ -56,7 +56,7 @@ app.get('/', async (req, res) => {
     .card{background:#fff;padding:30px 20px;border-radius:20px;box-shadow:0 10px 25px rgba(255,77,109,0.15);text-align:center;width:100%;max-width:320px;border:1px solid #ffccd5;}
     input,button{width:100%;padding:12px;margin:10px 0;border-radius:12px;border:1px solid #ffccd5;box-sizing:border-box;font-size:15px;outline:none;}
     button{background:linear-gradient(135deg,#ff9a9e,#ff4d6d);color:#fff;border:none;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(255,77,109,0.25);}</style></head>
-    <body><div class="card"><h3 style="color:#ff4d6d;margin-top:0;">🔐 Erişim Şifresi</h3><p style="font-size:13px;color:#666;">Varsayılan şifre: 123</p><form action="/giris" method="POST">
+    <body><div class="card"><h3 style="color:#ff4d6d;margin-top:0;">🔐 Erişim Şifresi</h3><p style="font-size:13px;color:#666;">Deftere giriş şifrenizi girin</p><form action="/giris" method="POST">
     <input type="password" name="password" placeholder="••••" required style="text-align:center;font-size:20px;letter-spacing:4px;"><button type="submit">Giriş Yap ❤️</button></form></div></body></html>`);
 });
 
@@ -68,27 +68,30 @@ app.post('/giris', async (req, res) => {
     } else { res.send(`<script>alert("Hatalı şifre!"); window.location.href="/";</script>`); }
 });
 
-// Güvenlik Şifresi Doğrulama
+// Güncel şifre ile yönetim paneli doğrulama
 app.post('/api/verify-master', async (req, res) => {
     const { masterKey } = req.body;
     const db = await getDB();
-    if (masterKey === db.accessPassword || masterKey === "123") {
+    if (masterKey === db.accessPassword) {
         res.json({ success: true });
     } else {
         res.json({ success: false });
     }
 });
 
-// Şifre Değiştirme
+// Yeni şifre güncelleme
 app.post('/api/update-password', async (req, res) => {
     const { newPassword, masterKey } = req.body;
     const db = await getDB();
-    if (masterKey !== db.accessPassword && masterKey !== "123") {
-        return res.status(403).json({ error: "Hatalı yönetici şifresi!" });
+    if (masterKey !== db.accessPassword) {
+        return res.status(403).json({ error: "Mevcut şifreniz hatalı!" });
+    }
+    if (!newPassword || newPassword.length < 1) {
+        return res.status(400).json({ error: "Yeni şifre boş olamaz." });
     }
     db.accessPassword = newPassword;
     await db.save();
-    res.json({ success: true, message: "Şifre başarıyla değiştirildi!" });
+    res.json({ success: true, message: "Şifre başarıyla güncellendi!" });
 });
 
 app.get('/notlar', async (req, res) => {
